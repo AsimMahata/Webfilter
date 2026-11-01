@@ -4,9 +4,9 @@
   <img src="icons/chronolocklogo.png" width="200" />
 </p>
 
-A lightweight browser extension for filtering YouTube videos by upload age, channels, and keywords.
+A lightweight, modern browser extension (Manifest V3) for filtering YouTube videos by upload age, channels, and keywords.
 
-WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff year, while also giving you granular control over blocked channels and keyword filtering. Built for nostalgia, intentional browsing, old internet archaeology, and resisting platform algorithmic pressure.
+WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff year, while giving you granular control over blocked channels and keyword filtering. Built for nostalgia, intentional browsing, old internet archaeology, and resisting platform algorithmic pressure.
 
 ![WebFilter UI](screenshots/Screenshot1.png)
 
@@ -14,6 +14,7 @@ WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff y
 
 ## Features
 
+* **Manifest V3 Compliant**: Built for Chrome, Brave, Edge, Opera, and modern Firefox.
 * **Master & Per-Feature Toggles**:
   * Toggle WebFilter globally on or off
   * Individually toggle Year cutoff filtering
@@ -42,12 +43,12 @@ WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff y
 
 ## Installation
 
-### Chrome / Chromium (Chrome, Brave, Edge, Opera)
+### Chrome, Brave, Edge, Opera (Unpacked)
 
-1. Open your browser and go to `chrome://extensions`.
+1. Open your browser and go to `chrome://extensions` (or `edge://extensions` / `brave://extensions`).
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **Load unpacked**.
-4. Select the `chrome` folder from this repository.
+4. Select the root folder of this repository.
 5. Open [YouTube](https://www.youtube.com) and the WebFilter control panel will appear in the lower-right corner.
 
 ---
