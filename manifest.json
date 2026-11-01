@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "ChronoLock",
+  "name": "WebFilter",
   "version": "1.0",
-  "description": "Filters YouTube videos by upload age.",
+  "description": "Filters YouTube videos by upload age, channels, and keywords.",
 
   "permissions": [
     "storage",
@@ -24,7 +24,7 @@
 
 "browser_specific_settings": {
   "gecko": {
-    "id": "chronolock@asim",
+    "id": "webfilter@asim",
     "strict_min_version": "140.0",
     "data_collection_permissions": {
       "required": ["none"]

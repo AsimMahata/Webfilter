@@ -1,4 +1,4 @@
-console.log("CHRONOLOCK ACTIVE");
+console.log("WEBFILTER ACTIVE");
 
 if (window.__chronolockInjected) {
   // Prevent duplicate injection on same page
@@ -698,11 +698,11 @@ function initChronoLock() {
       <!-- Header Bar -->
       <div id="chronolock-header">
         <div class="chronolock-header-title">
-          <span>⏳</span>
-          <span>CHRONOLOCK</span>
+          <span>🛡️</span>
+          <span>WEBFILTER</span>
         </div>
         <div class="chronolock-header-actions">
-          <label class="cl-switch" title="Master Toggle (All ChronoLock features)">
+          <label class="cl-switch" title="Master Toggle (All WebFilter features)">
             <input type="checkbox" id="chronolock-master-toggle" ${state.enabled ? "checked" : ""}>
             <span class="cl-slider-toggle"></span>
           </label>
@@ -1066,7 +1066,7 @@ function initChronoLock() {
 
     const btn = document.createElement("button");
     btn.className = "chronolock-block-btn";
-    btn.title = "Block this channel in ChronoLock";
+    btn.title = "Block this channel in WebFilter";
     btn.innerHTML = `🚫 <span>Block Channel</span>`;
 
     btn.addEventListener("click", (e) => {

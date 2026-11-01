@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ChronoLock",
+  "name": "WebFilter",
   "version": "1.0",
-  "description": "Filters YouTube videos by upload age.",
+  "description": "Filters YouTube videos by upload age, channels, and keywords.",
   "permissions": [
     "storage",
     "activeTab",
@@ -41,6 +41,6 @@
       "48": "icons/48.png",
       "128": "icons/128.png"
     },
-    "default_title": "ChronoLock (Click to toggle)"
+    "default_title": "WebFilter (Click to toggle)"
   }
 }
