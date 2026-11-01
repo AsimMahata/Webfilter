@@ -123,37 +123,50 @@ function initChronoLock() {
 
   #chronolock-ui {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 16px;
+    right: 16px;
     z-index: 99999999;
 
-    width: 300px;
-    border-radius: 16px;
+    width: 250px;
+    border-radius: 12px;
 
-    font-size: 12px;
+    font-size: 11.5px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f1f1f1;
 
-    background: rgba(18, 18, 22, 0.85);
+    background: rgba(18, 18, 22, 0.88);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
 
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
     overflow: hidden;
     user-select: none;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  /* Automatically hide dock when video is fullscreened */
+  :fullscreen #chronolock-ui,
+  :-webkit-full-screen #chronolock-ui,
+  :-moz-full-screen #chronolock-ui,
+  body.yt-fullscreen-active #chronolock-ui,
+  ytd-app[fullscreen] #chronolock-ui,
+  ytd-watch-flexy[fullscreen] #chronolock-ui,
+  #movie_player:fullscreen ~ #chronolock-ui,
+  .ytp-fullscreen #chronolock-ui,
+  body.chronolock-fullscreen-hide #chronolock-ui {
+    display: none !important;
   }
 
   #chronolock-ui:hover {
     border-color: rgba(255, 255, 255, 0.22);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
   }
 
-  /* Header Bar */
+  /* Header Bar - Compact */
   #chronolock-header {
     cursor: pointer;
-    padding: 10px 14px;
+    padding: 7px 11px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -169,9 +182,9 @@ function initChronoLock() {
   .chronolock-header-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.08em;
     color: #ffffff;
   }
@@ -179,11 +192,11 @@ function initChronoLock() {
   .chronolock-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .chronolock-chevron {
-    font-size: 10px;
+    font-size: 9px;
     opacity: 0.6;
     transition: transform 0.2s ease;
   }
@@ -192,12 +205,12 @@ function initChronoLock() {
     transform: rotate(180deg);
   }
 
-  /* Modern iOS-style toggle switches */
+  /* Modern compact iOS-style toggle switches */
   .cl-switch {
     position: relative;
     display: inline-block;
-    width: 34px;
-    height: 18px;
+    width: 28px;
+    height: 15px;
     flex-shrink: 0;
   }
 
@@ -213,17 +226,17 @@ function initChronoLock() {
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(255, 255, 255, 0.16);
     transition: 0.2s ease;
-    border-radius: 20px;
+    border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .cl-slider-toggle:before {
     position: absolute;
     content: "";
-    height: 12px;
-    width: 12px;
-    left: 2px;
-    bottom: 2px;
+    height: 11px;
+    width: 11px;
+    left: 1px;
+    bottom: 1px;
     background: white;
     transition: 0.2s ease;
     border-radius: 50%;
@@ -236,13 +249,13 @@ function initChronoLock() {
   }
 
   .cl-switch input:checked + .cl-slider-toggle:before {
-    transform: translateX(16px);
+    transform: translateX(13px);
   }
 
   /* Panel body */
   #chronolock-panel {
-    padding: 12px 14px 14px 14px;
-    max-height: 480px;
+    padding: 10px 11px 11px 11px;
+    max-height: 420px;
     overflow-y: auto;
     scrollbar-width: thin;
   }
@@ -251,32 +264,32 @@ function initChronoLock() {
   .cl-feature-toggles {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     background: rgba(0, 0, 0, 0.28);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    padding: 8px 10px;
-    margin-bottom: 12px;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-bottom: 10px;
   }
 
   .cl-feature-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 500;
   }
 
   .cl-feature-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
   .cl-feature-badge {
-    font-size: 10px;
-    padding: 1px 5px;
-    border-radius: 4px;
+    font-size: 9.5px;
+    padding: 1px 4px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.1);
     color: #cbd5e1;
   }
@@ -284,11 +297,11 @@ function initChronoLock() {
   /* Navigation Tabs */
   .cl-tabs {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     background: rgba(0, 0, 0, 0.35);
-    padding: 3px;
-    border-radius: 8px;
-    margin-bottom: 12px;
+    padding: 2px;
+    border-radius: 7px;
+    margin-bottom: 10px;
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
@@ -297,9 +310,9 @@ function initChronoLock() {
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 6px 4px;
-    border-radius: 6px;
-    font-size: 11px;
+    padding: 4px 2px;
+    border-radius: 5px;
+    font-size: 10.5px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -327,14 +340,14 @@ function initChronoLock() {
   }
 
   .cl-control-group {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   .cl-label {
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     color: #94a3b8;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -343,7 +356,7 @@ function initChronoLock() {
   /* Sliders & Inputs */
   .cl-slider-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
   }
 
@@ -354,41 +367,40 @@ function initChronoLock() {
   }
 
   #chronolock-input {
-    width: 58px;
+    width: 52px;
     background: rgba(0,0,0,0.45);
     color: #fff;
     border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 6px;
-    padding: 4px 6px;
+    border-radius: 5px;
+    padding: 3px 4px;
     text-align: center;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .chronolock-presets {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     flex-wrap: wrap;
-    margin-top: 6px;
+    margin-top: 5px;
   }
 
   .chronolock-presets button {
     flex: 1;
-    min-width: 44px;
+    min-width: 38px;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 6px;
+    border-radius: 5px;
     color: #e2e8f0;
-    padding: 4px 6px;
-    font-size: 11px;
+    padding: 3px 4px;
+    font-size: 10px;
     font-weight: 500;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition: background 0.15s ease;
   }
 
   .chronolock-presets button:hover {
     background: rgba(255, 255, 255, 0.16);
-    transform: translateY(-1px);
   }
 
   #chronolock-mode {
@@ -396,38 +408,38 @@ function initChronoLock() {
     background: rgba(0,0,0,0.45);
     color: #fff;
     border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-size: 11px;
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 10.5px;
     cursor: pointer;
   }
 
   /* Block list chips & inputs */
   .chronolock-list-box {
-    max-height: 110px;
-    min-height: 48px;
+    max-height: 95px;
+    min-height: 42px;
     overflow-y: auto;
     background: rgba(0,0,0,0.35);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 6px;
+    border-radius: 6px;
+    padding: 5px;
     display: flex;
     flex-wrap: wrap;
     align-content: flex-start;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 3px;
+    margin-top: 5px;
     scrollbar-width: thin;
   }
 
   .chronolock-chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     background: rgba(255,255,255,0.12);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    padding: 2px 7px;
-    font-size: 11px;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10.5px;
     color: #f1f5f9;
     max-width: 100%;
     word-break: break-all;
@@ -437,7 +449,7 @@ function initChronoLock() {
     cursor: pointer;
     font-weight: bold;
     color: #f87171;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
     transition: color 0.15s ease;
   }
@@ -448,18 +460,18 @@ function initChronoLock() {
 
   .chronolock-input-row {
     display: flex;
-    gap: 6px;
-    margin-top: 6px;
+    gap: 5px;
+    margin-top: 5px;
   }
 
   .chronolock-input-row input {
     flex: 1;
     background: rgba(0,0,0,0.45);
     border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 6px;
+    border-radius: 5px;
     color: #fff;
-    padding: 5px 8px;
-    font-size: 11px;
+    padding: 4px 6px;
+    font-size: 10.5px;
     outline: none;
   }
 
@@ -471,11 +483,11 @@ function initChronoLock() {
     cursor: pointer;
     background: #3b82f6;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     color: #ffffff;
     font-weight: 600;
-    padding: 5px 12px;
-    font-size: 11px;
+    padding: 4px 10px;
+    font-size: 10.5px;
     transition: background 0.15s ease;
   }
 
@@ -1177,6 +1189,35 @@ function initChronoLock() {
   }
 
   // ---------------------------
+  // FULLSCREEN HANDLER
+  // ---------------------------
+
+  function checkFullscreen() {
+    const isFs = Boolean(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement ||
+      document.querySelector(".ytp-fullscreen, ytd-watch-flexy[fullscreen]")
+    );
+
+    document.body.classList.toggle("chronolock-fullscreen-hide", isFs);
+
+    const ui = document.getElementById("chronolock-ui");
+    if (ui) {
+      if (isFs) {
+        ui.style.setProperty("display", "none", "important");
+      } else {
+        ui.style.removeProperty("display");
+      }
+    }
+  }
+
+  document.addEventListener("fullscreenchange", checkFullscreen);
+  document.addEventListener("webkitfullscreenchange", checkFullscreen);
+  document.addEventListener("mozfullscreenchange", checkFullscreen);
+
+  // ---------------------------
   // OBSERVER
   // ---------------------------
 
@@ -1186,6 +1227,7 @@ function initChronoLock() {
     const observer = new MutationObserver(() => {
       clearTimeout(filterTimeout);
       filterTimeout = setTimeout(() => {
+        checkFullscreen();
         if (!document.getElementById("chronolock-ui")) {
           createUI();
         }
