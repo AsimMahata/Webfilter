@@ -4,9 +4,9 @@
   <img src="icons/chronolocklogo.png" width="200" />
 </p>
 
-A lightweight Firefox extension for filtering YouTube videos by upload age.
+A lightweight browser extension for filtering YouTube videos by upload age, channels, and keywords.
 
-ChronoLock allows you to hide, dim, or fade videos newer than a selected cutoff year, reshaping YouTube into something slower, stranger, and more archival. Built for nostalgia, intentional browsing, old internet archaeology, and resisting the platform’s constant pressure toward recency.
+ChronoLock allows you to hide, dim, or fade videos newer than a selected cutoff year, while also giving you granular control over blocked channels and keyword filtering. Built for nostalgia, intentional browsing, old internet archaeology, and resisting platform algorithmic pressure.
 
 ![ChronoLock UI](screenshots/Screenshot1.png)
 
@@ -14,100 +14,58 @@ ChronoLock allows you to hide, dim, or fade videos newer than a selected cutoff 
 
 ## Features
 
-* Filter videos newer than a chosen year
-* Three filtering modes:
-
-  * **Hide** — removes videos entirely
-  * **Dim** — desaturates and lowers opacity
-  * **Fade** — visually suppresses videos without removing layout space
-* Floating in-page control panel
-* Persistent saved settings
-* Lightweight vanilla JavaScript implementation
-* No telemetry
-* No tracking
-* No data collection
+* **Master & Per-Feature Toggles**:
+  * Toggle ChronoLock globally on or off
+  * Individually toggle Year cutoff filtering
+  * Individually toggle Channel blocking
+  * Individually toggle Keyword/phrase blocking
+* **Year Cutoff Filtering**:
+  * Filter videos newer than a chosen year (slider, numeric input, or quick presets: `'05`, `'07`, `2012`, `2016`, `2018`)
+  * Three filtering modes:
+    * **Hide** — removes videos entirely from layout
+    * **Dim** — desaturates and lowers opacity
+    * **Fade** — visually suppresses videos without removing layout space
+* **Channel Blocking**:
+  * Block specific channels directly from the in-page panel
+  * Hover over any video card on YouTube to reveal a one-click **🚫 Block Channel** button
+  * Manage blocked channels with removable chips
+* **Keyword & Phrase Blocking**:
+  * Block videos matching specific keywords in titles or metadata
+  * Easily manage and remove keywords
+* **Floating In-Page Glassmorphic Panel**: Sleek, collapsible interface directly on YouTube
+* **No Telemetry, No Tracking, No Data Collection**
 
 ![ChronoLock UI](screenshots/screenshot2.png)
 ![ChronoLock UI](screenshots/screenshot3.png)
 
 ---
 
-## Installation (Firefox)
+## Installation
 
-### Permanent Install (Recommended)
+### Chrome / Chromium (Chrome, Brave, Edge, Opera)
 
-🔗 Install ChronoLock on Firefox: https://addons.mozilla.org/en-US/firefox/addon/chronolock/
+1. Open your browser and go to `chrome://extensions`.
+2. Enable **Developer mode** (toggle in the top-right corner).
+3. Click **Load unpacked**.
+4. Select the `chrome` folder from this repository.
+5. Open [YouTube](https://www.youtube.com) and the ChronoLock control panel will appear in the lower-right corner.
 
 ---
 
-### Temporary Install (Developer Mode)
+### Firefox (Developer Mode / Temporary)
 
-1. Open Firefox
+1. Open Firefox.
 2. Navigate to:
-
-```text
-about:debugging#/runtime/this-firefox
-```
-
-3. Click:
-
-```text
-Load Temporary Add-on
-```
-
-4. Select `manifest.json` inside the ChronoLock folder
-
-> Temporary installs will be removed when Firefox closes.
-
----
-
-### Manual `.xpi` Install (Testing / Advanced ~ Not Yet Available)
-
-* Download the `.xpi` file
-* Open Firefox
-* Drag the `.xpi` into the browser window
-* Confirm installation
-
----
-
-## Optional companion extensions
-
-ChronoLock works on its own.
-
-I like to pair it with YouTube Redux to reshape YouTube’s interface and reduce algorithmic noise.
-
-👉 YouTube Redux: https://addons.mozilla.org/en-US/firefox/addon/youtube-redux/
-
-This is not required. It simply changes how the site presents itself, while ChronoLock changes what is allowed to surface.
+   ```text
+   about:debugging#/runtime/this-firefox
+   ```
+3. Click **Load Temporary Add-on**.
+4. Select `manifest.json` inside the root ChronoLock folder.
 
 ---
 
 ## License
 
-ChronoLock is licensed under the MIT License.
+ChronoLock is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-You are free to use, modify, distribute, and sublicense this software, including for commercial use, provided that the original copyright notice and license are included in all copies or substantial portions of the software.
-
-The software is provided “as is”, without warranty of any kind.
-
----
-
-## Notes
-
-YouTube changes its internal structure frequently. Future platform updates may occasionally break filtering behavior until the extension is updated.
-
-ChronoLock intentionally avoids heavy frameworks and build pipelines in favor of a small, transparent codebase that can be easily modified and understood.
-
----
-
-## Support
-
-If you want to support continued development:
-
-https://ko-fi.com/melanmel
-
-You are under no obligations here, the extension will always be free and open-source.
-
----
-
-Created by Enargeia.
+Copyright (c) 2026 Asim.
