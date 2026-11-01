@@ -16,7 +16,9 @@ function initChronoLock() {
   let state = {
     enabled: true,
     cutoffYear: 2018,
-    mode: "hidden" // hidden | dim | fade
+    mode: "hidden", // hidden | dim | fade
+    blockedChannels: [],
+    blockedKeywords: []
   };
 
   let panelOpen = false;
@@ -30,6 +32,12 @@ function initChronoLock() {
     }
     if (!["hidden", "dim", "fade"].includes(state.mode)) {
       state.mode = state.mode === "vanish" ? "hidden" : "hidden";
+    }
+    if (!Array.isArray(state.blockedChannels)) {
+      state.blockedChannels = [];
+    }
+    if (!Array.isArray(state.blockedKeywords)) {
+      state.blockedKeywords = [];
     }
   }
 
@@ -221,6 +229,104 @@ function initChronoLock() {
     font-size: 12px;
     padding: 8px 12px !important;
   }
+
+  /* Hover block button on video cards */
+  .chronolock-card-relative {
+    position: relative !important;
+  }
+
+  .chronolock-block-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    background: rgba(18, 18, 18, 0.88);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: system-ui, -apple-system, sans-serif;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: background 0.15s ease, transform 0.15s ease;
+    white-space: nowrap;
+    pointer-events: auto;
+  }
+
+  .chronolock-block-btn:hover {
+    background: rgba(220, 38, 38, 0.9);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.03);
+  }
+
+  ytd-rich-item-renderer:hover .chronolock-block-btn,
+  ytd-video-renderer:hover .chronolock-block-btn,
+  ytd-compact-video-renderer:hover .chronolock-block-btn,
+  ytd-grid-video-renderer:hover .chronolock-block-btn,
+  ytd-reel-item-renderer:hover .chronolock-block-btn {
+    display: inline-flex !important;
+  }
+
+  /* Block list chips & inputs */
+  .chronolock-list-box {
+    max-height: 80px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+    scrollbar-width: thin;
+  }
+
+  .chronolock-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #e0e0e0;
+    max-width: 100%;
+    word-break: break-all;
+  }
+
+  .chronolock-chip span.remove-chip {
+    cursor: pointer;
+    font-weight: bold;
+    color: #ef9a9a;
+    margin-left: 2px;
+  }
+
+  .chronolock-chip span.remove-chip:hover {
+    color: #ff5252;
+  }
+
+  .chronolock-input-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .chronolock-input-row input {
+    flex: 1;
+    font-size: 11px;
+  }
+
+  .chronolock-input-row button {
+    padding: 4px 8px !important;
+    font-size: 11px;
+  }
   `;
   (document.head || document.documentElement).appendChild(style);
 
@@ -275,6 +381,75 @@ function initChronoLock() {
     }
   }
 
+  function renderChipList(containerId, countId, items, onRemove) {
+    const container = document.getElementById(containerId);
+    const countEl = document.getElementById(countId);
+    if (countEl) countEl.textContent = items.length;
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (items.length === 0) {
+      container.innerHTML = `<span style="opacity:0.5; font-size:11px; padding:2px 4px;">None</span>`;
+      return;
+    }
+
+    items.forEach((item, idx) => {
+      const chip = document.createElement("span");
+      chip.className = "chronolock-chip";
+      chip.textContent = item;
+
+      const removeBtn = document.createElement("span");
+      removeBtn.className = "remove-chip";
+      removeBtn.innerHTML = " &times;";
+      removeBtn.title = "Remove";
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onRemove(idx);
+      });
+
+      chip.appendChild(removeBtn);
+      container.appendChild(chip);
+    });
+  }
+
+  function addBlockedChannel(channelName) {
+    if (!channelName) return;
+    const clean = channelName.trim();
+    if (!clean) return;
+    if (!state.blockedChannels.some((c) => c.toLowerCase() === clean.toLowerCase())) {
+      state.blockedChannels.push(clean);
+      saveState();
+      syncControls();
+      runFilter();
+    }
+  }
+
+  function removeBlockedChannel(index) {
+    state.blockedChannels.splice(index, 1);
+    saveState();
+    syncControls();
+    runFilter();
+  }
+
+  function addBlockedKeyword(keyword) {
+    if (!keyword) return;
+    const clean = keyword.trim();
+    if (!clean) return;
+    if (!state.blockedKeywords.some((k) => k.toLowerCase() === clean.toLowerCase())) {
+      state.blockedKeywords.push(clean);
+      saveState();
+      syncControls();
+      runFilter();
+    }
+  }
+
+  function removeBlockedKeyword(index) {
+    state.blockedKeywords.splice(index, 1);
+    saveState();
+    syncControls();
+    runFilter();
+  }
+
   function syncControls(ui) {
     if (!ui) ui = document.getElementById("chronolock-ui");
     if (!ui) return;
@@ -286,6 +461,19 @@ function initChronoLock() {
     if (slider) slider.value = state.cutoffYear;
     if (input) input.value = state.cutoffYear;
     if (mode) mode.value = state.mode;
+
+    renderChipList(
+      "chronolock-channel-list",
+      "chronolock-channel-count",
+      state.blockedChannels,
+      removeBlockedChannel
+    );
+    renderChipList(
+      "chronolock-keyword-list",
+      "chronolock-keyword-count",
+      state.blockedKeywords,
+      removeBlockedKeyword
+    );
   }
 
   function updateAllUI() {
@@ -349,6 +537,30 @@ function initChronoLock() {
               <option value="fade">Fade</option>
             </select>
           </div>
+        </div>
+
+        <div class="chronolock-section" style="margin-top:12px; text-align:left;">
+          <div style="font-weight:600; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>Blocked Channels</span>
+            <span id="chronolock-channel-count" style="opacity:0.7;">0</span>
+          </div>
+          <div class="chronolock-input-row">
+            <input id="chronolock-channel-input" type="text" placeholder="Channel name..." />
+            <button id="chronolock-channel-add">Add</button>
+          </div>
+          <div id="chronolock-channel-list" class="chronolock-list-box"></div>
+        </div>
+
+        <div class="chronolock-section" style="margin-top:10px; text-align:left;">
+          <div style="font-weight:600; margin-bottom:4px; display:flex; justify-content:space-between;">
+            <span>Blocked Keywords</span>
+            <span id="chronolock-keyword-count" style="opacity:0.7;">0</span>
+          </div>
+          <div class="chronolock-input-row">
+            <input id="chronolock-keyword-input" type="text" placeholder="Keyword or phrase..." />
+            <button id="chronolock-keyword-add">Add</button>
+          </div>
+          <div id="chronolock-keyword-list" class="chronolock-list-box"></div>
         </div>
 
         <div style="margin-top:12px;">
@@ -417,6 +629,39 @@ function initChronoLock() {
       state.mode = e.target.value;
       saveState();
       runFilter();
+    });
+
+    const channelInput = ui.querySelector("#chronolock-channel-input");
+    const channelAddBtn = ui.querySelector("#chronolock-channel-add");
+    const keywordInput = ui.querySelector("#chronolock-keyword-input");
+    const keywordAddBtn = ui.querySelector("#chronolock-keyword-add");
+
+    channelAddBtn?.addEventListener("click", () => {
+      if (channelInput && channelInput.value) {
+        addBlockedChannel(channelInput.value);
+        channelInput.value = "";
+      }
+    });
+
+    channelInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && channelInput.value) {
+        addBlockedChannel(channelInput.value);
+        channelInput.value = "";
+      }
+    });
+
+    keywordAddBtn?.addEventListener("click", () => {
+      if (keywordInput && keywordInput.value) {
+        addBlockedKeyword(keywordInput.value);
+        keywordInput.value = "";
+      }
+    });
+
+    keywordInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && keywordInput.value) {
+        addBlockedKeyword(keywordInput.value);
+        keywordInput.value = "";
+      }
     });
   }
 
@@ -496,6 +741,109 @@ function initChronoLock() {
     return null;
   }
 
+  function extractVideoDetails(v) {
+    // 1. Channel name extraction
+    let channelName = "";
+    const channelEl = v.querySelector(
+      "#channel-name, .ytd-channel-name, ytd-channel-name, #byline, .ytd-channel-name yt-formatted-string, #text.ytd-channel-name, #upload-info #channel-name"
+    );
+    if (channelEl) {
+      channelName = (channelEl.textContent || channelEl.innerText || "").trim();
+    }
+    if (!channelName) {
+      // Fallback: check link href with /@ or /channel/
+      const chLink = v.querySelector("a[href*='/@'], a[href*='/channel/'], a[href*='/c/']");
+      if (chLink) {
+        channelName = (chLink.textContent || chLink.innerText || "").trim();
+        if (!channelName && chLink.getAttribute("href")) {
+          const href = chLink.getAttribute("href");
+          const m = href.match(/\/(@[^\/?]+)/);
+          if (m) channelName = m[1];
+        }
+      }
+    }
+
+    // 2. Title extraction
+    let videoTitle = "";
+    const titleEl = v.querySelector("#video-title, #video-title-link, [id='video-title']");
+    if (titleEl) {
+      videoTitle = (titleEl.textContent || titleEl.innerText || titleEl.getAttribute("title") || "").trim();
+    }
+
+    // Full text of card (for keywords or fallback)
+    const fullText = (v.textContent || v.innerText || "").trim();
+
+    return {
+      channelName,
+      videoTitle,
+      fullText
+    };
+  }
+
+  function attachBlockButton(v) {
+    if (v.querySelector(".chronolock-block-btn")) return;
+
+    if (!v.classList.contains("chronolock-card-relative")) {
+      v.classList.add("chronolock-card-relative");
+    }
+
+    const btn = document.createElement("button");
+    btn.className = "chronolock-block-btn";
+    btn.title = "Block this channel in ChronoLock";
+    btn.innerHTML = `🚫 <span>Block Channel</span>`;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const details = extractVideoDetails(v);
+      if (details.channelName) {
+        addBlockedChannel(details.channelName);
+      } else {
+        const manual = prompt("Block channel name:", "");
+        if (manual) {
+          addBlockedChannel(manual);
+        }
+      }
+    });
+
+    v.appendChild(btn);
+  }
+
+  function isBlockedByChannelOrKeyword(v) {
+    if ((!state.blockedChannels || state.blockedChannels.length === 0) &&
+        (!state.blockedKeywords || state.blockedKeywords.length === 0)) {
+      return false;
+    }
+
+    const details = extractVideoDetails(v);
+    const chLower = (details.channelName || "").toLowerCase();
+    const titleLower = (details.videoTitle || "").toLowerCase();
+    const fullLower = (details.fullText || "").toLowerCase();
+
+    // Check channel
+    if (chLower && state.blockedChannels.length > 0) {
+      for (const blocked of state.blockedChannels) {
+        const b = blocked.toLowerCase().trim();
+        if (b && (chLower === b || chLower.includes(b))) {
+          return true;
+        }
+      }
+    }
+
+    // Check keyword against video title and full card text
+    if (state.blockedKeywords.length > 0) {
+      for (const blocked of state.blockedKeywords) {
+        const b = blocked.toLowerCase().trim();
+        if (b && (titleLower.includes(b) || fullLower.includes(b))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   // ---------------------------
   // FILTERING
   // ---------------------------
@@ -528,12 +876,20 @@ function initChronoLock() {
     const videos = getVideos();
 
     videos.forEach((v) => {
+      attachBlockButton(v);
       resetVideo(v);
 
       if (!state.enabled) {
         return;
       }
 
+      // Check custom channel & keyword blocklists
+      if (isBlockedByChannelOrKeyword(v)) {
+        applyMode(v);
+        return;
+      }
+
+      // Check year cutoff
       const text = extractVideoDateText(v);
       const year = getYear(text);
 
