@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "WebFilter",
-  "version": "1.0",
-  "description": "Filters YouTube videos by upload age, channels, and keywords.",
+  "version": "1.1",
+  "description": "Filters YouTube videos & Twitter/X tweets by upload age, channels/authors, and keywords.",
   "permissions": [
     "storage",
     "activeTab",
@@ -10,7 +10,11 @@
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
-    "*://youtube.com/*"
+    "*://youtube.com/*",
+    "*://*.twitter.com/*",
+    "*://twitter.com/*",
+    "*://*.x.com/*",
+    "*://x.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -19,7 +23,11 @@
     {
       "matches": [
         "*://*.youtube.com/*",
-        "*://youtube.com/*"
+        "*://youtube.com/*",
+        "*://*.twitter.com/*",
+        "*://twitter.com/*",
+        "*://*.x.com/*",
+        "*://x.com/*"
       ],
       "js": [
         "content.js"
@@ -41,6 +49,6 @@
       "48": "icons/48.png",
       "128": "icons/128.png"
     },
-    "default_title": "WebFilter (Click to toggle)"
+    "default_title": "WebFilter (Click to open panel)"
   }
 }

@@ -4,9 +4,9 @@
   <img src="icons/chronolocklogo.png" width="200" />
 </p>
 
-A lightweight, modern browser extension (Manifest V3) for filtering YouTube videos by upload age, channels, and keywords.
+A lightweight, modern browser extension (Manifest V3) for filtering **YouTube** videos and **Twitter / X** tweets by upload age, channels/authors, and keywords.
 
-WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff year, while giving you granular control over blocked channels and keyword filtering. Built for nostalgia, intentional browsing, old internet archaeology, and resisting platform algorithmic pressure.
+WebFilter allows you to hide, dim, or fade items newer than a selected cutoff year, while giving you granular control over blocked channels/authors and keyword filtering. Built for nostalgia, intentional browsing, clean feeds, and resisting platform algorithmic pressure.
 
 ![WebFilter UI](screenshots/Screenshot1.png)
 
@@ -15,25 +15,32 @@ WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff y
 ## Features
 
 * **Manifest V3 Compliant**: Built for Chrome, Brave, Edge, Opera, and modern Firefox.
+* **YouTube & Twitter / X Support**:
+  * Seamlessly filters YouTube video feeds, shorts, search results, and recommendations.
+  * Filters Twitter / X home feeds, timeline tweets, search results, and replies by tweet age, author (@handle or display name), and keywords.
 * **Master & Per-Feature Toggles**:
   * Toggle WebFilter globally on or off
   * Individually toggle Year cutoff filtering
-  * Individually toggle Channel blocking
+  * Individually toggle Channel / Author blocking
   * Individually toggle Keyword/phrase blocking
+* **Granular Item Management & Live Search**:
+  * **Search**: Real-time search filter in both channels/authors and keywords lists.
+  * **Individual Item Toggles**: Disable or enable individual keywords or channels without deleting them.
+  * **Delete**: Remove any item with a single click.
+* **Click-to-Open Extension Icon**:
+  * Clicking the pinned extension icon in your browser toolbar instantly toggles/opens the in-page WebFilter dock UI on YouTube and Twitter/X.
 * **Year Cutoff Filtering**:
-  * Filter videos newer than a chosen year (slider, numeric input, or quick presets: `'05`, `'07`, `2012`, `2016`, `2018`)
+  * Filter items newer than a chosen year (slider, numeric input, or quick presets: `'06`, `2010`, `2015`, `2018`, `2020`)
   * Three filtering modes:
-    * **Hide** — removes videos entirely from layout
+    * **Hide** — removes items entirely from layout
     * **Dim** — desaturates and lowers opacity
-    * **Fade** — visually suppresses videos without removing layout space
-* **Channel Blocking**:
-  * Block specific channels directly from the in-page panel
-  * Hover over any video card on YouTube to reveal a one-click **🚫 Block Channel** button
-  * Manage blocked channels with removable chips
+    * **Fade** — visually suppresses items without breaking layout space
+* **Channel / Author Blocking**:
+  * Block specific channels or Twitter authors directly from the in-page panel.
+  * Hover over any video card or tweet to reveal a one-click **🚫 Block Channel / Block Author** button.
 * **Keyword & Phrase Blocking**:
-  * Block videos matching specific keywords in titles or metadata
-  * Easily manage and remove keywords
-* **Floating In-Page Glassmorphic Panel**: Sleek, collapsible interface directly on YouTube
+  * Block items matching specific keywords in titles, tweet text, or metadata.
+* **Floating In-Page Glassmorphic Panel**: Sleek, collapsible interface directly on YouTube and Twitter/X. Automatically hides during fullscreen video playback on YouTube.
 * **No Telemetry, No Tracking, No Data Collection**
 
 ![WebFilter UI](screenshots/screenshot2.png)
@@ -48,8 +55,8 @@ WebFilter allows you to hide, dim, or fade videos newer than a selected cutoff y
 1. Open your browser and go to `chrome://extensions` (or `edge://extensions` / `brave://extensions`).
 2. Enable **Developer mode** (toggle in the top-right corner).
 3. Click **Load unpacked**.
-4. Select the root folder of this repository.
-5. Open [YouTube](https://www.youtube.com) and the WebFilter control panel will appear in the lower-right corner.
+4. Select the root folder of this repository (or your worktree folder).
+5. Open [YouTube](https://www.youtube.com) or [Twitter / X](https://x.com) — the WebFilter control panel will appear in the lower-right corner. You can also click the extension toolbar icon at any time to open the panel!
 
 ---
 

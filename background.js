@@ -1,7 +1,12 @@
 const DEFAULT_STATE = {
   enabled: true,
+  yearFilterEnabled: true,
+  channelFilterEnabled: true,
+  keywordFilterEnabled: true,
   cutoffYear: 2018,
-  mode: "hidden"
+  mode: "hidden",
+  blockedChannels: [],
+  blockedKeywords: []
 };
 
 async function getState() {
@@ -40,15 +45,31 @@ function updateBadge(enabled, tabId) {
   }
 }
 
-// Set badge and auto-inject into existing YouTube tabs on install
+const MATCHED_URLS = [
+  "*://*.youtube.com/*",
+  "*://youtube.com/*",
+  "*://*.twitter.com/*",
+  "*://twitter.com/*",
+  "*://*.x.com/*",
+  "*://x.com/*"
+];
+
+function isSupportedUrl(url) {
+  if (!url) return false;
+  return (
+    url.includes("youtube.com") ||
+    url.includes("twitter.com") ||
+    url.includes("x.com")
+  );
+}
+
+// Set badge and auto-inject into existing supported tabs on install
 chrome.runtime.onInstalled.addListener(async () => {
   const state = await getState();
   updateBadge(state.enabled);
 
   try {
-    const tabs = await chrome.tabs.query({
-      url: ["*://*.youtube.com/*", "*://youtube.com/*"]
-    });
+    const tabs = await chrome.tabs.query({ url: MATCHED_URLS });
     for (const tab of tabs) {
       if (tab.id) {
         chrome.scripting.executeScript({
@@ -70,32 +91,30 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 // Handle clicking the extension icon in Chrome toolbar
+// Now: Opens/toggles the WebFilter dock UI on the current tab (YouTube or Twitter/X)
 chrome.action.onClicked.addListener(async (tab) => {
   const state = await getState();
-  state.enabled = !state.enabled;
 
-  await saveState(state);
-  updateBadge(state.enabled);
-
-  const isYouTube = tab?.url && (
-    tab.url.includes("youtube.com") ||
-    tab.url.startsWith("https://www.youtube.com") ||
-    tab.url.startsWith("https://youtube.com")
-  );
-
-  if (isYouTube && tab.id) {
+  if (tab?.id && isSupportedUrl(tab.url)) {
     chrome.tabs.sendMessage(tab.id, {
-      type: "CHRONOLOCK_TOGGLE",
+      type: "WEBFILTER_TOGGLE_UI",
       state
     }).catch(() => {
-      // Content script may not be loaded yet, inject it
+      // Content script may not be loaded yet; inject it and retry opening UI
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ["content.js"]
+      }).then(() => {
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tab.id, {
+            type: "WEBFILTER_TOGGLE_UI",
+            state
+          }).catch(() => {});
+        }, 150);
       }).catch(() => {});
     });
-  } else if (!isYouTube) {
-    // Open YouTube if user clicked toolbar icon while on another site
+  } else {
+    // If clicked on another site or empty tab, open YouTube as default
     chrome.tabs.create({ url: "https://www.youtube.com" });
   }
 });

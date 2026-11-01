@@ -9,6 +9,9 @@ if (window.__chronolockInjected) {
 }
 
 function initChronoLock() {
+  const isTwitter = /twitter\.com|x\.com/.test(window.location.hostname);
+  const isYouTube = /youtube\.com/.test(window.location.hostname);
+
   // ---------------------------
   // STATE
   // ---------------------------
@@ -20,12 +23,33 @@ function initChronoLock() {
     keywordFilterEnabled: true,
     cutoffYear: 2018,
     mode: "hidden", // hidden | dim | fade
-    blockedChannels: [],
-    blockedKeywords: []
+    blockedChannels: [], // Array<{ text: string, enabled: boolean }>
+    blockedKeywords: []  // Array<{ text: string, enabled: boolean }>
   };
 
   let panelOpen = false;
-  let activeTab = "year"; // "year" | "channels" | "keywords"
+  let activeTab = isTwitter ? "keywords" : "year";
+  let channelSearchQuery = "";
+  let keywordSearchQuery = "";
+
+  // Normalize legacy array format (strings -> { text, enabled })
+  function normalizeItemList(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .map((item) => {
+        if (typeof item === "string") {
+          const t = item.trim();
+          return t ? { text: t, enabled: true } : null;
+        } else if (item && typeof item === "object" && typeof item.text === "string") {
+          return {
+            text: item.text.trim(),
+            enabled: typeof item.enabled === "boolean" ? item.enabled : true
+          };
+        }
+        return null;
+      })
+      .filter((item) => item && item.text.length > 0);
+  }
 
   function normalizeState() {
     if (typeof state.cutoffYear !== "number" || isNaN(state.cutoffYear)) {
@@ -46,12 +70,8 @@ function initChronoLock() {
     if (!["hidden", "dim", "fade"].includes(state.mode)) {
       state.mode = state.mode === "vanish" ? "hidden" : "hidden";
     }
-    if (!Array.isArray(state.blockedChannels)) {
-      state.blockedChannels = [];
-    }
-    if (!Array.isArray(state.blockedKeywords)) {
-      state.blockedKeywords = [];
-    }
+    state.blockedChannels = normalizeItemList(state.blockedChannels);
+    state.blockedKeywords = normalizeItemList(state.blockedKeywords);
   }
 
   // ---------------------------
@@ -127,22 +147,22 @@ function initChronoLock() {
     right: 16px;
     z-index: 99999999;
 
-    width: 250px;
+    width: 280px;
     border-radius: 12px;
 
     font-size: 11.5px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f1f1f1;
 
-    background: rgba(18, 18, 22, 0.88);
+    background: rgba(18, 18, 24, 0.92);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
 
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
     overflow: hidden;
     user-select: none;
-    transition: opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
 
   /* Automatically hide dock when video is fullscreened */
@@ -159,14 +179,14 @@ function initChronoLock() {
   }
 
   #chronolock-ui:hover {
-    border-color: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.24);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75);
   }
 
   /* Header Bar - Compact */
   #chronolock-header {
     cursor: pointer;
-    padding: 7px 11px;
+    padding: 8px 12px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -184,15 +204,15 @@ function initChronoLock() {
     align-items: center;
     gap: 6px;
     font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
     color: #ffffff;
   }
 
   .chronolock-header-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
   }
 
   .chronolock-chevron {
@@ -252,23 +272,67 @@ function initChronoLock() {
     transform: translateX(13px);
   }
 
+  /* Tiny toggle for individual list items */
+  .cl-mini-switch {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+
+  .cl-mini-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .cl-mini-toggle {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.2);
+    transition: 0.18s ease;
+    border-radius: 10px;
+  }
+
+  .cl-mini-toggle:before {
+    position: absolute;
+    content: "";
+    height: 8px;
+    width: 8px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    transition: 0.18s ease;
+    border-radius: 50%;
+  }
+
+  .cl-mini-switch input:checked + .cl-mini-toggle {
+    background: #10b981;
+  }
+
+  .cl-mini-switch input:checked + .cl-mini-toggle:before {
+    transform: translateX(10px);
+  }
+
   /* Panel body */
   #chronolock-panel {
-    padding: 10px 11px 11px 11px;
-    max-height: 420px;
+    padding: 10px 12px 12px 12px;
+    max-height: 440px;
     overflow-y: auto;
     scrollbar-width: thin;
   }
 
-  /* Feature Toggles Overview Strip */
+  /* Feature Toggles Strip */
   .cl-feature-toggles {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: rgba(0, 0, 0, 0.28);
+    background: rgba(0, 0, 0, 0.32);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    padding: 6px 8px;
+    padding: 6px 9px;
     margin-bottom: 10px;
   }
 
@@ -288,21 +352,21 @@ function initChronoLock() {
 
   .cl-feature-badge {
     font-size: 9.5px;
-    padding: 1px 4px;
-    border-radius: 3px;
+    padding: 1px 5px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.1);
     color: #cbd5e1;
+    font-weight: 600;
   }
 
-  /* Navigation Tabs */
+  /* Tabs */
   .cl-tabs {
     display: flex;
-    gap: 3px;
-    background: rgba(0, 0, 0, 0.35);
-    padding: 2px;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.32);
+    padding: 3px;
     border-radius: 7px;
     margin-bottom: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .cl-tab-btn {
@@ -310,27 +374,25 @@ function initChronoLock() {
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 4px 2px;
-    border-radius: 5px;
     font-size: 10.5px;
     font-weight: 600;
+    padding: 5px 0;
+    border-radius: 5px;
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: center;
   }
 
   .cl-tab-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
   }
 
   .cl-tab-btn.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+    background: #3b82f6;
+    color: #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
 
-  /* Subpanel Sections */
   .cl-subpanel {
     display: none;
   }
@@ -339,21 +401,22 @@ function initChronoLock() {
     display: block;
   }
 
+  /* Form controls */
   .cl-control-group {
-    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .cl-label {
-    font-size: 10.5px;
-    font-weight: 600;
-    color: #94a3b8;
-    margin-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 10.5px;
   }
 
-  /* Sliders & Inputs */
   .cl-slider-row {
     display: flex;
     gap: 6px;
@@ -364,6 +427,7 @@ function initChronoLock() {
     flex: 1;
     accent-color: #3b82f6;
     cursor: pointer;
+    height: 4px;
   }
 
   #chronolock-input {
@@ -414,48 +478,29 @@ function initChronoLock() {
     cursor: pointer;
   }
 
-  /* Block list chips & inputs */
-  .chronolock-list-box {
-    max-height: 95px;
-    min-height: 42px;
-    overflow-y: auto;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    padding: 5px;
-    display: flex;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    gap: 3px;
-    margin-top: 5px;
-    scrollbar-width: thin;
+  /* Search & Add row */
+  .chronolock-search-row {
+    margin-bottom: 6px;
   }
 
-  .chronolock-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    padding: 2px 6px;
+  .chronolock-search-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 5px;
+    color: #fff;
+    padding: 4px 8px;
     font-size: 10.5px;
-    color: #f1f5f9;
-    max-width: 100%;
-    word-break: break-all;
+    outline: none;
   }
 
-  .chronolock-chip span.remove-chip {
-    cursor: pointer;
-    font-weight: bold;
-    color: #f87171;
-    font-size: 11px;
-    line-height: 1;
-    transition: color 0.15s ease;
+  .chronolock-search-input::placeholder {
+    color: rgba(255,255,255,0.4);
   }
 
-  .chronolock-chip span.remove-chip:hover {
-    color: #ef4444;
+  .chronolock-search-input:focus {
+    border-color: #3b82f6;
   }
 
   .chronolock-input-row {
@@ -495,7 +540,83 @@ function initChronoLock() {
     background: #2563eb;
   }
 
-  /* Hover block button on video cards */
+  /* Modern Item List with individual toggles & delete */
+  .chronolock-list-box {
+    max-height: 140px;
+    min-height: 50px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.38);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+    scrollbar-width: thin;
+  }
+
+  .chronolock-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 10.5px;
+    color: #f1f5f9;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .chronolock-list-item:hover {
+    background: rgba(255,255,255,0.1);
+  }
+
+  .chronolock-list-item.is-disabled {
+    opacity: 0.45;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .chronolock-list-item-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 6px;
+    font-weight: 500;
+  }
+
+  .chronolock-list-item.is-disabled .chronolock-list-item-text {
+    text-decoration: line-through;
+  }
+
+  .chronolock-list-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .chronolock-del-btn {
+    cursor: pointer;
+    font-weight: bold;
+    color: #f87171;
+    font-size: 13px;
+    line-height: 1;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: transparent;
+    border: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .chronolock-del-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+  }
+
+  /* Hover block button on YouTube & Twitter cards */
   .chronolock-card-relative {
     position: relative !important;
   }
@@ -508,7 +629,7 @@ function initChronoLock() {
     display: none;
     align-items: center;
     gap: 4px;
-    background: rgba(18, 18, 22, 0.9);
+    background: rgba(18, 18, 22, 0.92);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 6px;
@@ -534,53 +655,109 @@ function initChronoLock() {
   ytd-video-renderer:hover .chronolock-block-btn,
   ytd-compact-video-renderer:hover .chronolock-block-btn,
   ytd-grid-video-renderer:hover .chronolock-block-btn,
-  ytd-reel-item-renderer:hover .chronolock-block-btn {
+  ytd-reel-item-renderer:hover .chronolock-block-btn,
+  article[data-testid="tweet"]:hover .chronolock-block-btn {
     display: inline-flex !important;
   }
   `;
   (document.head || document.documentElement).appendChild(style);
 
   // ---------------------------
-  // UI
+  // UI ITEM LIST RENDERING
   // ---------------------------
 
-  function renderChipList(containerId, countId, items, onRemove) {
+  function renderInteractiveList(containerId, countId, items, searchQuery, onToggle, onRemove) {
     const container = document.getElementById(containerId);
     const countEl = document.getElementById(countId);
-    if (countEl) countEl.textContent = items.length;
     if (!container) return;
+
+    const activeCount = items.filter((i) => i.enabled).length;
+    if (countEl) {
+      countEl.textContent = `${activeCount}/${items.length}`;
+    }
+
+    const filtered = items.map((item, originalIndex) => ({ item, originalIndex })).filter(({ item }) => {
+      if (!searchQuery) return true;
+      return item.text.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     container.innerHTML = "";
     if (items.length === 0) {
-      container.innerHTML = `<span style="opacity:0.45; font-size:11px; padding:4px;">No items blocked</span>`;
+      container.innerHTML = `<span style="opacity:0.45; font-size:10.5px; padding:6px; text-align:center;">No items added</span>`;
       return;
     }
 
-    items.forEach((item, idx) => {
-      const chip = document.createElement("span");
-      chip.className = "chronolock-chip";
-      chip.textContent = item;
+    if (filtered.length === 0) {
+      container.innerHTML = `<span style="opacity:0.45; font-size:10.5px; padding:6px; text-align:center;">No matching items</span>`;
+      return;
+    }
 
-      const removeBtn = document.createElement("span");
-      removeBtn.className = "remove-chip";
-      removeBtn.innerHTML = " &times;";
-      removeBtn.title = "Remove";
-      removeBtn.addEventListener("click", (e) => {
+    filtered.forEach(({ item, originalIndex }) => {
+      const row = document.createElement("div");
+      row.className = `chronolock-list-item ${item.enabled ? "" : "is-disabled"}`;
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "chronolock-list-item-text";
+      textSpan.textContent = item.text;
+      textSpan.title = item.text;
+
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "chronolock-list-item-actions";
+
+      // Mini toggle switch
+      const switchLabel = document.createElement("label");
+      switchLabel.className = "cl-mini-switch";
+      switchLabel.title = item.enabled ? "Enabled (Click to disable)" : "Disabled (Click to enable)";
+
+      const switchInput = document.createElement("input");
+      switchInput.type = "checkbox";
+      switchInput.checked = Boolean(item.enabled);
+      switchInput.addEventListener("change", (e) => {
         e.stopPropagation();
-        onRemove(idx);
+        onToggle(originalIndex, switchInput.checked);
       });
 
-      chip.appendChild(removeBtn);
-      container.appendChild(chip);
+      const sliderSpan = document.createElement("span");
+      sliderSpan.className = "cl-mini-toggle";
+
+      switchLabel.appendChild(switchInput);
+      switchLabel.appendChild(sliderSpan);
+
+      // Delete button
+      const delBtn = document.createElement("button");
+      delBtn.className = "chronolock-del-btn";
+      delBtn.innerHTML = "&times;";
+      delBtn.title = "Delete item";
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onRemove(originalIndex);
+      });
+
+      actionsDiv.appendChild(switchLabel);
+      actionsDiv.appendChild(delBtn);
+
+      row.appendChild(textSpan);
+      row.appendChild(actionsDiv);
+      container.appendChild(row);
     });
   }
 
+  // Channel Operations
   function addBlockedChannel(channelName) {
     if (!channelName) return;
     const clean = channelName.trim();
     if (!clean) return;
-    if (!state.blockedChannels.some((c) => c.toLowerCase() === clean.toLowerCase())) {
-      state.blockedChannels.push(clean);
+    if (!state.blockedChannels.some((c) => c.text.toLowerCase() === clean.toLowerCase())) {
+      state.blockedChannels.push({ text: clean, enabled: true });
+      saveState();
+      syncControls();
+      runFilter();
+    }
+  }
+
+  function toggleBlockedChannel(index, enabled) {
+    if (state.blockedChannels[index]) {
+      state.blockedChannels[index].enabled = enabled;
       saveState();
       syncControls();
       runFilter();
@@ -594,12 +771,22 @@ function initChronoLock() {
     runFilter();
   }
 
+  // Keyword Operations
   function addBlockedKeyword(keyword) {
     if (!keyword) return;
     const clean = keyword.trim();
     if (!clean) return;
-    if (!state.blockedKeywords.some((k) => k.toLowerCase() === clean.toLowerCase())) {
-      state.blockedKeywords.push(clean);
+    if (!state.blockedKeywords.some((k) => k.text.toLowerCase() === clean.toLowerCase())) {
+      state.blockedKeywords.push({ text: clean, enabled: true });
+      saveState();
+      syncControls();
+      runFilter();
+    }
+  }
+
+  function toggleBlockedKeyword(index, enabled) {
+    if (state.blockedKeywords[index]) {
+      state.blockedKeywords[index].enabled = enabled;
       saveState();
       syncControls();
       runFilter();
@@ -644,27 +831,32 @@ function initChronoLock() {
     const yearBadge = ui.querySelector("#cl-year-badge");
     if (yearBadge) yearBadge.textContent = state.cutoffYear;
 
-    // Chip lists
-    renderChipList(
+    const activeChannels = state.blockedChannels.filter((c) => c.enabled).length;
+    const chBadge = ui.querySelector("#cl-channel-badge");
+    if (chBadge) chBadge.textContent = `${activeChannels}/${state.blockedChannels.length}`;
+
+    const activeKeywords = state.blockedKeywords.filter((k) => k.enabled).length;
+    const kwBadge = ui.querySelector("#cl-keyword-badge");
+    if (kwBadge) kwBadge.textContent = `${activeKeywords}/${state.blockedKeywords.length}`;
+
+    // Render Lists
+    renderInteractiveList(
       "chronolock-channel-list",
       "chronolock-channel-count",
       state.blockedChannels,
+      channelSearchQuery,
+      toggleBlockedChannel,
       removeBlockedChannel
     );
-    renderChipList(
+
+    renderInteractiveList(
       "chronolock-keyword-list",
       "chronolock-keyword-count",
       state.blockedKeywords,
+      keywordSearchQuery,
+      toggleBlockedKeyword,
       removeBlockedKeyword
     );
-
-    // Channel badge in feature overview & tab
-    const chBadge = ui.querySelector("#cl-channel-badge");
-    if (chBadge) chBadge.textContent = `${state.blockedChannels.length}`;
-
-    // Keyword badge in feature overview & tab
-    const kwBadge = ui.querySelector("#cl-keyword-badge");
-    if (kwBadge) kwBadge.textContent = `${state.blockedKeywords.length}`;
   }
 
   function updateToggleHeader(ui) {
@@ -682,6 +874,25 @@ function initChronoLock() {
     if (!ui) return;
     updateToggleHeader(ui);
     syncControls(ui);
+  }
+
+  function togglePanelVisibility(forceOpen) {
+    const ui = document.getElementById("chronolock-ui");
+    if (!ui) {
+      createUI();
+      panelOpen = true;
+      const createdPanel = document.getElementById("chronolock-panel");
+      if (createdPanel) createdPanel.style.display = "block";
+      updateToggleHeader();
+      return;
+    }
+
+    panelOpen = typeof forceOpen === "boolean" ? forceOpen : !panelOpen;
+    const panel = ui.querySelector("#chronolock-panel");
+    if (panel) {
+      panel.style.display = panelOpen ? "block" : "none";
+    }
+    updateToggleHeader(ui);
   }
 
   function switchTab(tabName) {
@@ -705,6 +916,9 @@ function initChronoLock() {
 
     const ui = document.createElement("div");
     ui.id = "chronolock-ui";
+
+    const channelLabelText = isTwitter ? "Authors" : "Channels";
+    const channelSingleText = isTwitter ? "Author" : "Channel";
 
     ui.innerHTML = `
       <!-- Header Bar -->
@@ -742,10 +956,10 @@ function initChronoLock() {
           <div class="cl-feature-row">
             <div class="cl-feature-info">
               <span>🚫</span>
-              <span>Channel Block</span>
-              <span id="cl-channel-badge" class="cl-feature-badge">${state.blockedChannels.length}</span>
+              <span>${channelLabelText} Block</span>
+              <span id="cl-channel-badge" class="cl-feature-badge">0</span>
             </div>
-            <label class="cl-switch" title="Toggle Channel Blocking">
+            <label class="cl-switch" title="Toggle ${channelLabelText} Blocking">
               <input type="checkbox" id="chronolock-channel-toggle" ${state.channelFilterEnabled ? "checked" : ""}>
               <span class="cl-slider-toggle"></span>
             </label>
@@ -755,7 +969,7 @@ function initChronoLock() {
             <div class="cl-feature-info">
               <span>🔤</span>
               <span>Keyword Block</span>
-              <span id="cl-keyword-badge" class="cl-feature-badge">${state.blockedKeywords.length}</span>
+              <span id="cl-keyword-badge" class="cl-feature-badge">0</span>
             </div>
             <label class="cl-switch" title="Toggle Keyword Blocking">
               <input type="checkbox" id="chronolock-keyword-toggle" ${state.keywordFilterEnabled ? "checked" : ""}>
@@ -766,32 +980,32 @@ function initChronoLock() {
 
         <!-- Navigation Tabs -->
         <div class="cl-tabs">
-          <button class="cl-tab-btn active" data-tab="year">Year</button>
-          <button class="cl-tab-btn" data-tab="channels">Channels</button>
-          <button class="cl-tab-btn" data-tab="keywords">Keywords</button>
+          <button class="cl-tab-btn ${activeTab === "year" ? "active" : ""}" data-tab="year">Year</button>
+          <button class="cl-tab-btn ${activeTab === "channels" ? "active" : ""}" data-tab="channels">${channelLabelText}</button>
+          <button class="cl-tab-btn ${activeTab === "keywords" ? "active" : ""}" data-tab="keywords">Keywords</button>
         </div>
 
         <!-- TAB 1: Year Settings -->
-        <div id="cl-subpanel-year" class="cl-subpanel active">
+        <div id="cl-subpanel-year" class="cl-subpanel ${activeTab === "year" ? "active" : ""}">
           <div class="cl-control-group">
             <div class="cl-label">
               <span>Cutoff Year</span>
-              <span style="opacity:0.7; font-size:10px;">Videos newer are filtered</span>
+              <span style="opacity:0.7; font-size:10px;">Items newer are filtered</span>
             </div>
             <div class="cl-slider-row">
               <input id="chronolock-slider" type="range" min="2005" max="2026" value="${state.cutoffYear}" />
               <input id="chronolock-input" type="number" min="2005" max="2026" value="${state.cutoffYear}" />
             </div>
             <div class="chronolock-presets">
-              <button data-year="2005">'05</button>
-              <button data-year="2007">'07</button>
-              <button data-year="2012">2012</button>
-              <button data-year="2016">2016</button>
+              <button data-year="2006">'06</button>
+              <button data-year="2010">2010</button>
+              <button data-year="2015">2015</button>
               <button data-year="2018">2018</button>
+              <button data-year="2020">2020</button>
             </div>
           </div>
 
-          <div class="cl-control-group" style="margin-top:12px;">
+          <div class="cl-control-group" style="margin-top:10px;">
             <div class="cl-label">
               <span>Filter Mode</span>
             </div>
@@ -803,24 +1017,28 @@ function initChronoLock() {
           </div>
         </div>
 
-        <!-- TAB 2: Channels -->
-        <div id="cl-subpanel-channels" class="cl-subpanel">
-          <div class="cl-label">
-            <span>Blocked Channels (<span id="chronolock-channel-count">0</span>)</span>
-            <span style="opacity:0.6; font-size:10px;">Or hover video & click Block</span>
+        <!-- TAB 2: Channels / Authors -->
+        <div id="cl-subpanel-channels" class="cl-subpanel ${activeTab === "channels" ? "active" : ""}">
+          <div class="cl-label" style="margin-bottom: 5px;">
+            <span>Blocked ${channelLabelText} (<span id="chronolock-channel-count">0</span> active)</span>
+          </div>
+          <div class="chronolock-search-row">
+            <input id="chronolock-channel-search" class="chronolock-search-input" type="text" placeholder="🔍 Search ${channelLabelText.toLowerCase()}..." />
           </div>
           <div class="chronolock-input-row">
-            <input id="chronolock-channel-input" type="text" placeholder="Channel name..." />
+            <input id="chronolock-channel-input" type="text" placeholder="Add ${channelSingleText.toLowerCase()} name..." />
             <button id="chronolock-channel-add">Add</button>
           </div>
           <div id="chronolock-channel-list" class="chronolock-list-box"></div>
         </div>
 
         <!-- TAB 3: Keywords -->
-        <div id="cl-subpanel-keywords" class="cl-subpanel">
-          <div class="cl-label">
-            <span>Blocked Keywords (<span id="chronolock-keyword-count">0</span>)</span>
-            <span style="opacity:0.6; font-size:10px;">Matches titles/metadata</span>
+        <div id="cl-subpanel-keywords" class="cl-subpanel ${activeTab === "keywords" ? "active" : ""}">
+          <div class="cl-label" style="margin-bottom: 5px;">
+            <span>Blocked Keywords (<span id="chronolock-keyword-count">0</span> active)</span>
+          </div>
+          <div class="chronolock-search-row">
+            <input id="chronolock-keyword-search" class="chronolock-search-input" type="text" placeholder="🔍 Search keywords..." />
           </div>
           <div class="chronolock-input-row">
             <input id="chronolock-keyword-input" type="text" placeholder="Keyword or phrase..." />
@@ -835,7 +1053,6 @@ function initChronoLock() {
     document.body.appendChild(ui);
 
     const header = ui.querySelector("#chronolock-header");
-    const panel = ui.querySelector("#chronolock-panel");
     const masterToggle = ui.querySelector("#chronolock-master-toggle");
     const yearToggle = ui.querySelector("#chronolock-year-toggle");
     const channelToggle = ui.querySelector("#chronolock-channel-toggle");
@@ -850,9 +1067,7 @@ function initChronoLock() {
     // Clicking header opens/closes panel (unless master switch clicked)
     header.addEventListener("click", (e) => {
       if (e.target.closest(".cl-switch")) return;
-      panelOpen = !panelOpen;
-      panel.style.display = panelOpen ? "block" : "none";
-      updateToggleHeader(ui);
+      togglePanelVisibility();
     });
 
     // Master Toggle
@@ -919,98 +1134,127 @@ function initChronoLock() {
       runFilter();
     });
 
+    // Search inputs
+    const channelSearch = ui.querySelector("#chronolock-channel-search");
+    channelSearch?.addEventListener("input", (e) => {
+      channelSearchQuery = e.target.value;
+      syncControls(ui);
+    });
+
+    const keywordSearch = ui.querySelector("#chronolock-keyword-search");
+    keywordSearch?.addEventListener("input", (e) => {
+      keywordSearchQuery = e.target.value;
+      syncControls(ui);
+    });
+
     // Channel adding
     const channelInput = ui.querySelector("#chronolock-channel-input");
     const channelAddBtn = ui.querySelector("#chronolock-channel-add");
-    channelAddBtn?.addEventListener("click", () => {
+    function handleAddChannel() {
       if (channelInput && channelInput.value) {
         addBlockedChannel(channelInput.value);
         channelInput.value = "";
       }
-    });
-
+    }
+    channelAddBtn?.addEventListener("click", handleAddChannel);
     channelInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && channelInput.value) {
-        addBlockedChannel(channelInput.value);
-        channelInput.value = "";
-      }
+      if (e.key === "Enter") handleAddChannel();
     });
 
     // Keyword adding
     const keywordInput = ui.querySelector("#chronolock-keyword-input");
     const keywordAddBtn = ui.querySelector("#chronolock-keyword-add");
-    keywordAddBtn?.addEventListener("click", () => {
+    function handleAddKeyword() {
       if (keywordInput && keywordInput.value) {
         addBlockedKeyword(keywordInput.value);
         keywordInput.value = "";
       }
-    });
-
+    }
+    keywordAddBtn?.addEventListener("click", handleAddKeyword);
     keywordInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && keywordInput.value) {
-        addBlockedKeyword(keywordInput.value);
-        keywordInput.value = "";
-      }
+      if (e.key === "Enter") handleAddKeyword();
     });
   }
 
   // ---------------------------
-  // VIDEO COLLECTION & PARSING
+  // CARD / VIDEO / TWEET PARSING
   // ---------------------------
 
-  function getVideos() {
-    return Array.from(
-      document.querySelectorAll(
-        "ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-reel-item-renderer"
-      )
-    );
+  function getItems() {
+    if (isYouTube) {
+      return Array.from(
+        document.querySelectorAll(
+          "ytd-rich-item-renderer, ytd-video-renderer, ytd-compact-video-renderer, ytd-grid-video-renderer, ytd-reel-item-renderer"
+        )
+      );
+    }
+    if (isTwitter) {
+      // Twitter / X tweet cards and user cells
+      return Array.from(
+        document.querySelectorAll('article[data-testid="tweet"]')
+      );
+    }
+    return [];
   }
 
-  function extractVideoDateText(v) {
-    // 1. Check if metadata container has an "ago" or time string
-    const metaLine = v.querySelector(
-      "#metadata-line, #metadata, #inline-metadata, ytd-video-meta-block, .ytd-video-meta-block"
-    );
-    if (metaLine) {
-      const txt = (metaLine.textContent || metaLine.innerText || "").trim();
-      if (txt && /ago|streamed|yesterday|today|premier/i.test(txt)) {
-        return txt;
+  function extractDateText(item) {
+    if (isYouTube) {
+      // 1. Check if metadata container has an "ago" or time string
+      const metaLine = item.querySelector(
+        "#metadata-line, #metadata, #inline-metadata, ytd-video-meta-block, .ytd-video-meta-block"
+      );
+      if (metaLine) {
+        const txt = (metaLine.textContent || metaLine.innerText || "").trim();
+        if (txt && /ago|streamed|yesterday|today|premier/i.test(txt)) {
+          return txt;
+        }
       }
+
+      // 2. Check title link or thumbnail aria-label which often contains timestamps like "2 weeks ago"
+      const titleLink = item.querySelector("#video-title-link, #video-title, a#thumbnail");
+      const aria = titleLink?.getAttribute("aria-label");
+      if (aria && /ago|streamed|yesterday|today|premier/i.test(aria)) {
+        return aria;
+      }
+
+      return (item.textContent || item.innerText || "").trim();
     }
 
-    // 2. Check title link or thumbnail aria-label which often contains timestamps like "2 weeks ago"
-    const titleLink = v.querySelector("#video-title-link, #video-title, a#thumbnail");
-    const aria = titleLink?.getAttribute("aria-label");
-    if (aria && /ago|streamed|yesterday|today|premier/i.test(aria)) {
-      return aria;
+    if (isTwitter) {
+      // Twitter <time datetime="2024-05-12T10:00:00.000Z">
+      const timeEl = item.querySelector("time");
+      if (timeEl) {
+        const dt = timeEl.getAttribute("datetime");
+        if (dt) return dt;
+        return (timeEl.textContent || "").trim();
+      }
+      return (item.textContent || "").trim();
     }
 
-    // 3. Fall back to entire element text content
-    return (v.textContent || v.innerText || "").trim();
+    return "";
   }
 
   function getYear(text) {
     if (!text) return null;
 
-    text = text.toLowerCase();
+    // Check ISO datetime format first (e.g. 2023-10-15T...)
+    const isoMatch = text.match(/\b(200\d|201\d|202\d)-\d{2}-\d{2}/);
+    if (isoMatch) {
+      return parseInt(isoMatch[1], 10);
+    }
 
+    text = text.toLowerCase();
     const now = new Date();
     const currentYear = now.getFullYear();
 
-    // 1. Years: e.g. "5y ago", "5 yr ago", "5 yrs ago", "5 years ago", "1 year ago", "a year ago"
+    // 1. Years ago: e.g. "5y ago", "5 yr ago", "5 yrs ago", "5 years ago", "1 year ago", "a year ago"
     let m = text.match(/(\d+|an?)\s*(?:years?|yrs?|yr|y)\.?\s+ago/);
     if (m) {
       const num = (m[1] === "a" || m[1] === "an") ? 1 : parseInt(m[1], 10);
       return currentYear - num;
     }
 
-    // 2. Sub-year units:
-    // - weeks: wk, wks, week, weeks, w
-    // - hours: hr, hrs, hour, hours, h
-    // - months: mo, mos, mth, mths, month, months
-    // - days: day, days, d
-    // - minutes: min, mins, minute, minutes, m
-    // - seconds: sec, secs, second, seconds, s
+    // 2. Sub-year units ago
     m = text.match(/(\d+|an?)\s*(?:months?|mths?|mth|mos?|mo|weeks?|wks?|wk|w|days?|d|hours?|hrs?|hr|h|minutes?|mins?|min|m|seconds?|secs?|sec|s)\.?\s+ago/);
     if (m) {
       return currentYear;
@@ -1021,7 +1265,7 @@ function initChronoLock() {
       return currentYear;
     }
 
-    // 4. Absolute 4-digit years (e.g. "Premiered Nov 12, 2017")
+    // 4. Absolute 4-digit years (e.g. "Premiered Nov 12, 2017" or "Oct 24, 2021")
     m = text.match(/\b(200\d|201\d|202\d)\b/);
     if (m) {
       return parseInt(m[1], 10);
@@ -1030,85 +1274,133 @@ function initChronoLock() {
     return null;
   }
 
-  function extractVideoDetails(v) {
-    // 1. Channel name extraction
-    let channelName = "";
-    const channelEl = v.querySelector(
-      "#channel-name, .ytd-channel-name, ytd-channel-name, #byline, .ytd-channel-name yt-formatted-string, #text.ytd-channel-name, #upload-info #channel-name"
-    );
-    if (channelEl) {
-      channelName = (channelEl.textContent || channelEl.innerText || "").trim();
-    }
-    if (!channelName) {
-      // Fallback: check link href with /@ or /channel/
-      const chLink = v.querySelector("a[href*='/@'], a[href*='/channel/'], a[href*='/c/']");
-      if (chLink) {
-        channelName = (chLink.textContent || chLink.innerText || "").trim();
-        if (!channelName && chLink.getAttribute("href")) {
-          const href = chLink.getAttribute("href");
-          const m = href.match(/\/(@[^\/?]+)/);
-          if (m) channelName = m[1];
+  function extractItemDetails(item) {
+    if (isYouTube) {
+      let channelName = "";
+      const channelEl = item.querySelector(
+        "#channel-name, .ytd-channel-name, ytd-channel-name, #byline, .ytd-channel-name yt-formatted-string, #text.ytd-channel-name, #upload-info #channel-name"
+      );
+      if (channelEl) {
+        channelName = (channelEl.textContent || channelEl.innerText || "").trim();
+      }
+      if (!channelName) {
+        const chLink = item.querySelector("a[href*='/@'], a[href*='/channel/'], a[href*='/c/']");
+        if (chLink) {
+          channelName = (chLink.textContent || chLink.innerText || "").trim();
+          if (!channelName && chLink.getAttribute("href")) {
+            const href = chLink.getAttribute("href");
+            const m = href.match(/\/(@[^\/?]+)/);
+            if (m) channelName = m[1];
+          }
         }
       }
+
+      let contentTitle = "";
+      const titleEl = item.querySelector("#video-title, #video-title-link, [id='video-title']");
+      if (titleEl) {
+        contentTitle = (titleEl.textContent || titleEl.innerText || titleEl.getAttribute("title") || "").trim();
+      }
+
+      const fullText = (item.textContent || item.innerText || "").trim();
+      return { channelName, contentTitle, fullText };
     }
 
-    // 2. Title extraction
-    let videoTitle = "";
-    const titleEl = v.querySelector("#video-title, #video-title-link, [id='video-title']");
-    if (titleEl) {
-      videoTitle = (titleEl.textContent || titleEl.innerText || titleEl.getAttribute("title") || "").trim();
+    if (isTwitter) {
+      // Author handle & name
+      let authorName = "";
+      let authorHandle = "";
+
+      const userEl = item.querySelector('[data-testid="User-Name"]');
+      if (userEl) {
+        const fullUserText = (userEl.textContent || "").trim();
+        // Look for @handle
+        const handleMatch = fullUserText.match(/@([\w_]+)/);
+        if (handleMatch) {
+          authorHandle = handleMatch[0]; // e.g. @username
+          authorName = fullUserText.replace(handleMatch[0], "").split("·")[0].trim();
+        } else {
+          authorName = fullUserText.split("·")[0].trim();
+        }
+      }
+
+      // Tweet text
+      let tweetText = "";
+      const tweetTextEl = item.querySelector('[data-testid="tweetText"]');
+      if (tweetTextEl) {
+        tweetText = (tweetTextEl.textContent || "").trim();
+      }
+
+      const fullText = (item.textContent || "").trim();
+      const channelName = authorHandle || authorName;
+
+      return {
+        channelName,
+        authorHandle,
+        authorName,
+        contentTitle: tweetText,
+        fullText
+      };
     }
 
-    // Full text of card (for keywords or fallback)
-    const fullText = (v.textContent || v.innerText || "").trim();
-
-    return {
-      channelName,
-      videoTitle,
-      fullText
-    };
+    return { channelName: "", contentTitle: "", fullText: "" };
   }
 
-  function attachBlockButton(v) {
-    if (v.querySelector(".chronolock-block-btn")) return;
+  function attachBlockButton(item) {
+    if (item.querySelector(".chronolock-block-btn")) return;
 
-    if (!v.classList.contains("chronolock-card-relative")) {
-      v.classList.add("chronolock-card-relative");
+    if (!item.classList.contains("chronolock-card-relative")) {
+      item.classList.add("chronolock-card-relative");
     }
 
     const btn = document.createElement("button");
     btn.className = "chronolock-block-btn";
-    btn.title = "Block this channel in WebFilter";
-    btn.innerHTML = `🚫 <span>Block Channel</span>`;
+    const btnLabel = isTwitter ? "Block Author" : "Block Channel";
+    btn.title = `Block this ${isTwitter ? "author" : "channel"} in WebFilter`;
+    btn.innerHTML = `🚫 <span>${btnLabel}</span>`;
 
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();
 
-      const details = extractVideoDetails(v);
-      if (details.channelName) {
-        addBlockedChannel(details.channelName);
+      const details = extractItemDetails(item);
+      const target = details.channelName || details.authorHandle || details.authorName;
+      if (target) {
+        addBlockedChannel(target);
       } else {
-        const manual = prompt("Block channel name:", "");
+        const manual = prompt(`Block ${isTwitter ? "author (@handle or name)" : "channel name"}:`, "");
         if (manual) {
           addBlockedChannel(manual);
         }
       }
     });
 
-    v.appendChild(btn);
+    item.appendChild(btn);
   }
 
-  function isBlockedByChannelOrKeyword(v) {
-    const details = extractVideoDetails(v);
+  function isBlockedByChannelOrKeyword(item) {
+    const details = extractItemDetails(item);
 
-    // 1. Check channel if channelFilterEnabled
+    // 1. Check channel / author if channelFilterEnabled
     if (state.channelFilterEnabled && Array.isArray(state.blockedChannels) && state.blockedChannels.length > 0) {
-      const chLower = (details.channelName || "").toLowerCase();
-      if (chLower) {
-        for (const blocked of state.blockedChannels) {
-          const b = blocked.toLowerCase().trim();
-          if (b && (chLower === b || chLower.includes(b))) {
+      const activeChannels = state.blockedChannels.filter((c) => c.enabled);
+      if (activeChannels.length > 0) {
+        const chLower = (details.channelName || "").toLowerCase();
+        const handleLower = (details.authorHandle || "").toLowerCase();
+        const authorLower = (details.authorName || "").toLowerCase();
+
+        for (const blocked of activeChannels) {
+          const b = blocked.text.toLowerCase().trim();
+          if (!b) continue;
+
+          // Match without or with '@'
+          const bClean = b.startsWith("@") ? b.slice(1) : b;
+          const hClean = handleLower.startsWith("@") ? handleLower.slice(1) : handleLower;
+
+          if (
+            chLower === b || chLower.includes(b) ||
+            (handleLower && (handleLower === b || hClean === bClean)) ||
+            (authorLower && (authorLower === b || authorLower.includes(b)))
+          ) {
             return true;
           }
         }
@@ -1117,12 +1409,16 @@ function initChronoLock() {
 
     // 2. Check keyword if keywordFilterEnabled
     if (state.keywordFilterEnabled && Array.isArray(state.blockedKeywords) && state.blockedKeywords.length > 0) {
-      const titleLower = (details.videoTitle || "").toLowerCase();
-      const fullLower = (details.fullText || "").toLowerCase();
-      for (const blocked of state.blockedKeywords) {
-        const b = blocked.toLowerCase().trim();
-        if (b && (titleLower.includes(b) || fullLower.includes(b))) {
-          return true;
+      const activeKeywords = state.blockedKeywords.filter((k) => k.enabled);
+      if (activeKeywords.length > 0) {
+        const titleLower = (details.contentTitle || "").toLowerCase();
+        const fullLower = (details.fullText || "").toLowerCase();
+
+        for (const blocked of activeKeywords) {
+          const b = blocked.text.toLowerCase().trim();
+          if (b && (titleLower.includes(b) || fullLower.includes(b))) {
+            return true;
+          }
         }
       }
     }
@@ -1134,36 +1430,36 @@ function initChronoLock() {
   // FILTERING
   // ---------------------------
 
-  function resetVideo(v) {
-    v.classList.remove(
+  function resetItem(item) {
+    item.classList.remove(
       "chronolock-hidden",
       "chronolock-dim",
       "chronolock-fade"
     );
   }
 
-  function applyMode(v) {
-    v.classList.remove(
+  function applyMode(item) {
+    item.classList.remove(
       "chronolock-hidden",
       "chronolock-dim",
       "chronolock-fade"
     );
 
     if (state.mode === "dim") {
-      v.classList.add("chronolock-dim");
+      item.classList.add("chronolock-dim");
     } else if (state.mode === "fade") {
-      v.classList.add("chronolock-fade");
+      item.classList.add("chronolock-fade");
     } else {
-      v.classList.add("chronolock-hidden");
+      item.classList.add("chronolock-hidden");
     }
   }
 
   function runFilter() {
-    const videos = getVideos();
+    const items = getItems();
 
-    videos.forEach((v) => {
-      attachBlockButton(v);
-      resetVideo(v);
+    items.forEach((item) => {
+      attachBlockButton(item);
+      resetItem(item);
 
       // If master extension switch is off, do not filter anything
       if (!state.enabled) {
@@ -1171,25 +1467,25 @@ function initChronoLock() {
       }
 
       // Check custom channel & keyword blocklists
-      if (isBlockedByChannelOrKeyword(v)) {
-        applyMode(v);
+      if (isBlockedByChannelOrKeyword(item)) {
+        applyMode(item);
         return;
       }
 
       // Check year cutoff (only if yearFilterEnabled is on)
       if (state.yearFilterEnabled) {
-        const text = extractVideoDateText(v);
+        const text = extractDateText(item);
         const year = getYear(text);
 
         if (year !== null && year > state.cutoffYear) {
-          applyMode(v);
+          applyMode(item);
         }
       }
     });
   }
 
   // ---------------------------
-  // FULLSCREEN HANDLER
+  // FULLSCREEN HANDLER (YouTube)
   // ---------------------------
 
   function checkFullscreen() {
@@ -1227,7 +1523,7 @@ function initChronoLock() {
     const observer = new MutationObserver(() => {
       clearTimeout(filterTimeout);
       filterTimeout = setTimeout(() => {
-        checkFullscreen();
+        if (isYouTube) checkFullscreen();
         if (!document.getElementById("chronolock-ui")) {
           createUI();
         }
@@ -1244,11 +1540,17 @@ function initChronoLock() {
   }
 
   // ---------------------------
-  // CROSS-CONTEXT SYNC
+  // CROSS-CONTEXT SYNC & MESSAGES
   // ---------------------------
 
   // Handle messages from the extension toolbar button
   chrome.runtime?.onMessage?.addListener((msg, sender, sendResponse) => {
+    if (msg && msg.type === "WEBFILTER_TOGGLE_UI") {
+      togglePanelVisibility();
+      sendResponse?.({ success: true, panelOpen });
+      return;
+    }
+
     if (msg && msg.type === "CHRONOLOCK_TOGGLE") {
       if (msg.state) {
         state = { ...state, ...msg.state };
