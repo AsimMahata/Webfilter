@@ -15,6 +15,9 @@ function initChronoLock() {
 
   let state = {
     enabled: true,
+    yearFilterEnabled: true,
+    channelFilterEnabled: true,
+    keywordFilterEnabled: true,
     cutoffYear: 2018,
     mode: "hidden", // hidden | dim | fade
     blockedChannels: [],
@@ -22,6 +25,7 @@ function initChronoLock() {
   };
 
   let panelOpen = false;
+  let activeTab = "year"; // "year" | "channels" | "keywords"
 
   function normalizeState() {
     if (typeof state.cutoffYear !== "number" || isNaN(state.cutoffYear)) {
@@ -29,6 +33,15 @@ function initChronoLock() {
     }
     if (typeof state.enabled !== "boolean") {
       state.enabled = true;
+    }
+    if (typeof state.yearFilterEnabled !== "boolean") {
+      state.yearFilterEnabled = true;
+    }
+    if (typeof state.channelFilterEnabled !== "boolean") {
+      state.channelFilterEnabled = true;
+    }
+    if (typeof state.keywordFilterEnabled !== "boolean") {
+      state.keywordFilterEnabled = true;
     }
     if (!["hidden", "dim", "fade"].includes(state.mode)) {
       state.mode = state.mode === "vanish" ? "hidden" : "hidden";
@@ -110,124 +123,364 @@ function initChronoLock() {
 
   #chronolock-ui {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
+    bottom: 20px;
+    right: 20px;
     z-index: 99999999;
 
-    width: 260px;
-
-    padding: 12px;
-    border-radius: 14px;
+    width: 300px;
+    border-radius: 16px;
 
     font-size: 12px;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #f1f1f1;
 
-    color: rgba(255,255,255,0.92);
+    background: rgba(18, 18, 22, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 
-    background: rgba(25, 25, 25, 0.78);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-
-    border: 1px solid rgba(255,255,255,0.18);
-
-    box-shadow:
-      0 10px 30px rgba(0,0,0,0.6),
-      inset 0 1px 0 rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    user-select: none;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
 
-  #chronolock-toggle {
+  #chronolock-ui:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  /* Header Bar */
+  #chronolock-header {
     cursor: pointer;
-    user-select: none;
-
-    padding: 10px;
-    border-radius: 12px;
-
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    font-weight: 650;
-    letter-spacing: 0.06em;
-
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    transition: background 0.15s ease, border-color 0.15s ease;
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background 0.15s ease;
   }
 
-  #chronolock-toggle:hover {
-    background: rgba(255,255,255,0.14);
-    border-color: rgba(255,255,255,0.25);
+  #chronolock-header:hover {
+    background: rgba(255, 255, 255, 0.08);
   }
 
-  #chronolock-status-badge {
-    display: inline-flex;
+  .chronolock-header-title {
+    display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.1);
+    gap: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #ffffff;
   }
 
-  #chronolock-status-badge:hover {
-    background: rgba(255,255,255,0.2);
+  .chronolock-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
+  .chronolock-chevron {
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+  }
+
+  .chronolock-chevron.open {
+    transform: rotate(180deg);
+  }
+
+  /* Modern iOS-style toggle switches */
+  .cl-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .cl-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .cl-slider-toggle {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.16);
+    transition: 0.2s ease;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .cl-slider-toggle:before {
+    position: absolute;
+    content: "";
+    height: 12px;
+    width: 12px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    transition: 0.2s ease;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .cl-switch input:checked + .cl-slider-toggle {
+    background: #3b82f6;
+    border-color: #60a5fa;
+  }
+
+  .cl-switch input:checked + .cl-slider-toggle:before {
+    transform: translateX(16px);
+  }
+
+  /* Panel body */
   #chronolock-panel {
-    margin-top: 10px;
+    padding: 12px 14px 14px 14px;
+    max-height: 480px;
+    overflow-y: auto;
+    scrollbar-width: thin;
   }
 
-  .chronolock-section {
-    margin-top: 10px;
-    text-align: center;
+  /* Feature Toggles Overview Strip */
+  .cl-feature-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+  }
+
+  .cl-feature-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
     font-weight: 500;
+  }
+
+  .cl-feature-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cl-feature-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+  }
+
+  /* Navigation Tabs */
+  .cl-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 3px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .cl-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 6px 4px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+
+  .cl-tab-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .cl-tab-btn.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  /* Subpanel Sections */
+  .cl-subpanel {
+    display: none;
+  }
+
+  .cl-subpanel.active {
+    display: block;
+  }
+
+  .cl-control-group {
+    margin-bottom: 10px;
+  }
+
+  .cl-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Sliders & Inputs */
+  .cl-slider-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  #chronolock-slider {
+    flex: 1;
+    accent-color: #3b82f6;
+    cursor: pointer;
+  }
+
+  #chronolock-input {
+    width: 58px;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 12px;
   }
 
   .chronolock-presets {
     display: flex;
-    justify-content: center;
+    gap: 4px;
     flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .chronolock-presets button {
+    flex: 1;
+    min-width: 44px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #e2e8f0;
+    padding: 4px 6px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  .chronolock-presets button:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+  }
+
+  #chronolock-mode {
+    width: 100%;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* Block list chips & inputs */
+  .chronolock-list-box {
+    max-height: 110px;
+    min-height: 48px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 4px;
+    margin-top: 6px;
+    scrollbar-width: thin;
+  }
+
+  .chronolock-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 11px;
+    color: #f1f5f9;
+    max-width: 100%;
+    word-break: break-all;
+  }
+
+  .chronolock-chip span.remove-chip {
+    cursor: pointer;
+    font-weight: bold;
+    color: #f87171;
+    font-size: 12px;
+    line-height: 1;
+    transition: color 0.15s ease;
+  }
+
+  .chronolock-chip span.remove-chip:hover {
+    color: #ef4444;
+  }
+
+  .chronolock-input-row {
+    display: flex;
     gap: 6px;
     margin-top: 6px;
   }
 
-  .chronolock-mode-wrap {
-    display: flex;
-    justify-content: center;
-    margin-top: 6px;
-  }
-
-  #chronolock-mode {
-    width: 130px;
-  }
-
-  #chronolock-panel button {
-    cursor: pointer;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.08);
-    color: inherit;
-    padding: 5px 10px;
-    transition: background 0.15s ease;
-  }
-
-  #chronolock-panel button:hover {
-    background: rgba(255,255,255,0.16);
-  }
-
-  #chronolock-panel input,
-  #chronolock-panel select {
-    background: rgba(0,0,0,0.35);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 8px;
-    padding: 5px;
+  .chronolock-input-row input {
+    flex: 1;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #fff;
+    padding: 5px 8px;
+    font-size: 11px;
     outline: none;
   }
 
-  #chronolock-enable {
+  .chronolock-input-row input:focus {
+    border-color: #3b82f6;
+  }
+
+  .chronolock-input-row button {
+    cursor: pointer;
+    background: #3b82f6;
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
     font-weight: 600;
-    font-size: 12px;
-    padding: 8px 12px !important;
+    padding: 5px 12px;
+    font-size: 11px;
+    transition: background 0.15s ease;
+  }
+
+  .chronolock-input-row button:hover {
+    background: #2563eb;
   }
 
   /* Hover block button on video cards */
@@ -243,7 +496,7 @@ function initChronoLock() {
     display: none;
     align-items: center;
     gap: 4px;
-    background: rgba(18, 18, 18, 0.88);
+    background: rgba(18, 18, 22, 0.9);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 6px;
@@ -251,16 +504,16 @@ function initChronoLock() {
     font-size: 11px;
     font-family: system-ui, -apple-system, sans-serif;
     cursor: pointer;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
     transition: background 0.15s ease, transform 0.15s ease;
     white-space: nowrap;
     pointer-events: auto;
   }
 
   .chronolock-block-btn:hover {
-    background: rgba(220, 38, 38, 0.9);
+    background: rgba(220, 38, 38, 0.95);
     border-color: rgba(255, 255, 255, 0.4);
     transform: scale(1.03);
   }
@@ -272,114 +525,12 @@ function initChronoLock() {
   ytd-reel-item-renderer:hover .chronolock-block-btn {
     display: inline-flex !important;
   }
-
-  /* Block list chips & inputs */
-  .chronolock-list-box {
-    max-height: 80px;
-    overflow-y: auto;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 6px;
-    padding: 4px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 5px;
-    scrollbar-width: thin;
-  }
-
-  .chronolock-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 11px;
-    color: #e0e0e0;
-    max-width: 100%;
-    word-break: break-all;
-  }
-
-  .chronolock-chip span.remove-chip {
-    cursor: pointer;
-    font-weight: bold;
-    color: #ef9a9a;
-    margin-left: 2px;
-  }
-
-  .chronolock-chip span.remove-chip:hover {
-    color: #ff5252;
-  }
-
-  .chronolock-input-row {
-    display: flex;
-    gap: 4px;
-    margin-top: 6px;
-  }
-
-  .chronolock-input-row input {
-    flex: 1;
-    font-size: 11px;
-  }
-
-  .chronolock-input-row button {
-    padding: 4px 8px !important;
-    font-size: 11px;
-  }
   `;
   (document.head || document.documentElement).appendChild(style);
 
   // ---------------------------
   // UI
   // ---------------------------
-
-  function updateToggleText(ui) {
-    if (!ui) ui = document.getElementById("chronolock-ui");
-    if (!ui) return;
-
-    const toggle = ui.querySelector("#chronolock-toggle");
-    if (!toggle) return;
-
-    toggle.innerHTML = `
-      <span id="chronolock-status-badge" title="Click to toggle filter on/off">
-        ${state.enabled ? "🔒" : "🔓"} ${state.cutoffYear}
-      </span>
-      <span style="opacity:0.9; font-weight:600; letter-spacing:0.12em;" title="Click to open/close settings">
-        CHRONOLOCK
-      </span>
-    `;
-
-    // Clicking status badge specifically toggles on/off directly
-    const badge = toggle.querySelector("#chronolock-status-badge");
-    badge?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      state.enabled = !state.enabled;
-      updateAllUI();
-      saveState();
-      runFilter();
-    });
-  }
-
-  function updateEnableBtn(ui) {
-    if (!ui) ui = document.getElementById("chronolock-ui");
-    if (!ui) return;
-
-    const btn = ui.querySelector("#chronolock-enable");
-    if (!btn) return;
-
-    if (state.enabled) {
-      btn.textContent = "🟢 Enabled (Click to Turn Off)";
-      btn.style.background = "rgba(46, 125, 50, 0.4)";
-      btn.style.borderColor = "rgba(76, 175, 80, 0.6)";
-      btn.style.color = "#a5d6a7";
-    } else {
-      btn.textContent = "🔴 Disabled (Click to Turn On)";
-      btn.style.background = "rgba(198, 40, 40, 0.4)";
-      btn.style.borderColor = "rgba(239, 83, 80, 0.6)";
-      btn.style.color = "#ef9a9a";
-    }
-  }
 
   function renderChipList(containerId, countId, items, onRemove) {
     const container = document.getElementById(containerId);
@@ -389,7 +540,7 @@ function initChronoLock() {
 
     container.innerHTML = "";
     if (items.length === 0) {
-      container.innerHTML = `<span style="opacity:0.5; font-size:11px; padding:2px 4px;">None</span>`;
+      container.innerHTML = `<span style="opacity:0.45; font-size:11px; padding:4px;">No items blocked</span>`;
       return;
     }
 
@@ -454,6 +605,21 @@ function initChronoLock() {
     if (!ui) ui = document.getElementById("chronolock-ui");
     if (!ui) return;
 
+    // Master switch
+    const masterSwitch = ui.querySelector("#chronolock-master-toggle");
+    if (masterSwitch) masterSwitch.checked = state.enabled;
+
+    // Sub-feature switches
+    const yearSwitch = ui.querySelector("#chronolock-year-toggle");
+    if (yearSwitch) yearSwitch.checked = state.yearFilterEnabled;
+
+    const channelSwitch = ui.querySelector("#chronolock-channel-toggle");
+    if (channelSwitch) channelSwitch.checked = state.channelFilterEnabled;
+
+    const keywordSwitch = ui.querySelector("#chronolock-keyword-toggle");
+    if (keywordSwitch) keywordSwitch.checked = state.keywordFilterEnabled;
+
+    // Sliders & inputs
     const slider = ui.querySelector("#chronolock-slider");
     const input = ui.querySelector("#chronolock-input");
     const mode = ui.querySelector("#chronolock-mode");
@@ -462,6 +628,11 @@ function initChronoLock() {
     if (input) input.value = state.cutoffYear;
     if (mode) mode.value = state.mode;
 
+    // Badges in overview
+    const yearBadge = ui.querySelector("#cl-year-badge");
+    if (yearBadge) yearBadge.textContent = state.cutoffYear;
+
+    // Chip lists
     renderChipList(
       "chronolock-channel-list",
       "chronolock-channel-count",
@@ -474,14 +645,45 @@ function initChronoLock() {
       state.blockedKeywords,
       removeBlockedKeyword
     );
+
+    // Channel badge in feature overview & tab
+    const chBadge = ui.querySelector("#cl-channel-badge");
+    if (chBadge) chBadge.textContent = `${state.blockedChannels.length}`;
+
+    // Keyword badge in feature overview & tab
+    const kwBadge = ui.querySelector("#cl-keyword-badge");
+    if (kwBadge) kwBadge.textContent = `${state.blockedKeywords.length}`;
+  }
+
+  function updateToggleHeader(ui) {
+    if (!ui) ui = document.getElementById("chronolock-ui");
+    if (!ui) return;
+
+    const chevron = ui.querySelector(".chronolock-chevron");
+    if (chevron) {
+      chevron.className = `chronolock-chevron ${panelOpen ? "open" : ""}`;
+    }
   }
 
   function updateAllUI() {
     const ui = document.getElementById("chronolock-ui");
     if (!ui) return;
-    updateToggleText(ui);
-    updateEnableBtn(ui);
+    updateToggleHeader(ui);
     syncControls(ui);
+  }
+
+  function switchTab(tabName) {
+    activeTab = tabName;
+    const ui = document.getElementById("chronolock-ui");
+    if (!ui) return;
+
+    ui.querySelectorAll(".cl-tab-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === tabName);
+    });
+
+    ui.querySelectorAll(".cl-subpanel").forEach((panel) => {
+      panel.classList.toggle("active", panel.id === `cl-subpanel-${tabName}`);
+    });
   }
 
   function createUI() {
@@ -493,56 +695,107 @@ function initChronoLock() {
     ui.id = "chronolock-ui";
 
     ui.innerHTML = `
-      <div id="chronolock-toggle"></div>
-
-      <div id="chronolock-panel" style="display:none;">
-
-        <div class="chronolock-section">
-          Cutoff Year
+      <!-- Header Bar -->
+      <div id="chronolock-header">
+        <div class="chronolock-header-title">
+          <span>⏳</span>
+          <span>CHRONOLOCK</span>
         </div>
-
-        <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-          <input id="chronolock-slider"
-            type="range"
-            min="2005"
-            max="2026"
-            style="flex:1;"
-          />
-
-          <input id="chronolock-input"
-            type="number"
-            min="2005"
-            max="2026"
-            style="width:70px;"
-          />
+        <div class="chronolock-header-actions">
+          <label class="cl-switch" title="Master Toggle (All ChronoLock features)">
+            <input type="checkbox" id="chronolock-master-toggle" ${state.enabled ? "checked" : ""}>
+            <span class="cl-slider-toggle"></span>
+          </label>
+          <span class="chronolock-chevron ${panelOpen ? "open" : ""}">▼</span>
         </div>
+      </div>
 
-        <div class="chronolock-section">
-          Presets
-          <div class="chronolock-presets">
-            <button data-year="2005">05'</button>
-            <button data-year="2007">07'</button>
-            <button data-year="2012">2012</button>
-            <button data-year="2016">2016</button>
-            <button data-year="2018">2018</button>
+      <!-- Main Expandable Panel -->
+      <div id="chronolock-panel" style="${panelOpen ? "display:block;" : "display:none;"}">
+
+        <!-- Feature Toggles Overview Strip -->
+        <div class="cl-feature-toggles">
+          <div class="cl-feature-row">
+            <div class="cl-feature-info">
+              <span>📅</span>
+              <span>Year Filter</span>
+              <span id="cl-year-badge" class="cl-feature-badge">${state.cutoffYear}</span>
+            </div>
+            <label class="cl-switch" title="Toggle Year Filtering">
+              <input type="checkbox" id="chronolock-year-toggle" ${state.yearFilterEnabled ? "checked" : ""}>
+              <span class="cl-slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="cl-feature-row">
+            <div class="cl-feature-info">
+              <span>🚫</span>
+              <span>Channel Block</span>
+              <span id="cl-channel-badge" class="cl-feature-badge">${state.blockedChannels.length}</span>
+            </div>
+            <label class="cl-switch" title="Toggle Channel Blocking">
+              <input type="checkbox" id="chronolock-channel-toggle" ${state.channelFilterEnabled ? "checked" : ""}>
+              <span class="cl-slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="cl-feature-row">
+            <div class="cl-feature-info">
+              <span>🔤</span>
+              <span>Keyword Block</span>
+              <span id="cl-keyword-badge" class="cl-feature-badge">${state.blockedKeywords.length}</span>
+            </div>
+            <label class="cl-switch" title="Toggle Keyword Blocking">
+              <input type="checkbox" id="chronolock-keyword-toggle" ${state.keywordFilterEnabled ? "checked" : ""}>
+              <span class="cl-slider-toggle"></span>
+            </label>
           </div>
         </div>
 
-        <div class="chronolock-section">
-          Mode
-          <div class="chronolock-mode-wrap">
+        <!-- Navigation Tabs -->
+        <div class="cl-tabs">
+          <button class="cl-tab-btn active" data-tab="year">Year</button>
+          <button class="cl-tab-btn" data-tab="channels">Channels</button>
+          <button class="cl-tab-btn" data-tab="keywords">Keywords</button>
+        </div>
+
+        <!-- TAB 1: Year Settings -->
+        <div id="cl-subpanel-year" class="cl-subpanel active">
+          <div class="cl-control-group">
+            <div class="cl-label">
+              <span>Cutoff Year</span>
+              <span style="opacity:0.7; font-size:10px;">Videos newer are filtered</span>
+            </div>
+            <div class="cl-slider-row">
+              <input id="chronolock-slider" type="range" min="2005" max="2026" value="${state.cutoffYear}" />
+              <input id="chronolock-input" type="number" min="2005" max="2026" value="${state.cutoffYear}" />
+            </div>
+            <div class="chronolock-presets">
+              <button data-year="2005">'05</button>
+              <button data-year="2007">'07</button>
+              <button data-year="2012">2012</button>
+              <button data-year="2016">2016</button>
+              <button data-year="2018">2018</button>
+            </div>
+          </div>
+
+          <div class="cl-control-group" style="margin-top:12px;">
+            <div class="cl-label">
+              <span>Filter Mode</span>
+            </div>
             <select id="chronolock-mode">
-              <option value="hidden">Hide</option>
-              <option value="dim">Dim</option>
-              <option value="fade">Fade</option>
+              <option value="hidden" ${state.mode === "hidden" ? "selected" : ""}>Hide completely</option>
+              <option value="dim" ${state.mode === "dim" ? "selected" : ""}>Dim & grayscale</option>
+              <option value="fade" ${state.mode === "fade" ? "selected" : ""}>Fade invisible (keep slot)</option>
             </select>
           </div>
         </div>
 
-        <div class="chronolock-section" style="margin-top:12px; text-align:left;">
-          <div style="font-weight:600; margin-bottom:4px; display:flex; justify-content:space-between;">
-            <span>Blocked Channels</span>
-            <span id="chronolock-channel-count" style="opacity:0.7;">0</span>
+        <!-- TAB 2: Channels -->
+        <div id="cl-subpanel-channels" class="cl-subpanel">
+          <div class="cl-label">
+            <span>Blocked Channels (<span id="chronolock-channel-count">0</span>)</span>
+            <span style="opacity:0.6; font-size:10px;">Or hover video & click Block</span>
           </div>
           <div class="chronolock-input-row">
             <input id="chronolock-channel-input" type="text" placeholder="Channel name..." />
@@ -551,10 +804,11 @@ function initChronoLock() {
           <div id="chronolock-channel-list" class="chronolock-list-box"></div>
         </div>
 
-        <div class="chronolock-section" style="margin-top:10px; text-align:left;">
-          <div style="font-weight:600; margin-bottom:4px; display:flex; justify-content:space-between;">
-            <span>Blocked Keywords</span>
-            <span id="chronolock-keyword-count" style="opacity:0.7;">0</span>
+        <!-- TAB 3: Keywords -->
+        <div id="cl-subpanel-keywords" class="cl-subpanel">
+          <div class="cl-label">
+            <span>Blocked Keywords (<span id="chronolock-keyword-count">0</span>)</span>
+            <span style="opacity:0.6; font-size:10px;">Matches titles/metadata</span>
           </div>
           <div class="chronolock-input-row">
             <input id="chronolock-keyword-input" type="text" placeholder="Keyword or phrase..." />
@@ -563,46 +817,70 @@ function initChronoLock() {
           <div id="chronolock-keyword-list" class="chronolock-list-box"></div>
         </div>
 
-        <div style="margin-top:12px;">
-          <button id="chronolock-enable" style="width:100%;">
-            Toggle
-          </button>
-        </div>
-
       </div>
     `;
 
     document.body.appendChild(ui);
 
-    const toggle = ui.querySelector("#chronolock-toggle");
+    const header = ui.querySelector("#chronolock-header");
     const panel = ui.querySelector("#chronolock-panel");
+    const masterToggle = ui.querySelector("#chronolock-master-toggle");
+    const yearToggle = ui.querySelector("#chronolock-year-toggle");
+    const channelToggle = ui.querySelector("#chronolock-channel-toggle");
+    const keywordToggle = ui.querySelector("#chronolock-keyword-toggle");
+
     const slider = ui.querySelector("#chronolock-slider");
     const input = ui.querySelector("#chronolock-input");
     const mode = ui.querySelector("#chronolock-mode");
-    const enableBtn = ui.querySelector("#chronolock-enable");
 
-    updateToggleText(ui);
-    updateEnableBtn(ui);
     syncControls(ui);
 
-    // Clicking the header bar toggles the dropdown settings panel open/close
-    toggle.addEventListener("click", () => {
+    // Clicking header opens/closes panel (unless master switch clicked)
+    header.addEventListener("click", (e) => {
+      if (e.target.closest(".cl-switch")) return;
       panelOpen = !panelOpen;
       panel.style.display = panelOpen ? "block" : "none";
+      updateToggleHeader(ui);
     });
 
-    // In-panel toggle button explicitly toggles filtering on/off
-    enableBtn.addEventListener("click", () => {
-      state.enabled = !state.enabled;
+    // Master Toggle
+    masterToggle.addEventListener("change", (e) => {
+      state.enabled = e.target.checked;
+      saveState();
       updateAllUI();
+      runFilter();
+    });
+
+    // Per-feature Toggles
+    yearToggle.addEventListener("change", (e) => {
+      state.yearFilterEnabled = e.target.checked;
       saveState();
       runFilter();
     });
 
+    channelToggle.addEventListener("change", (e) => {
+      state.channelFilterEnabled = e.target.checked;
+      saveState();
+      runFilter();
+    });
+
+    keywordToggle.addEventListener("change", (e) => {
+      state.keywordFilterEnabled = e.target.checked;
+      saveState();
+      runFilter();
+    });
+
+    // Tab buttons
+    ui.querySelectorAll(".cl-tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    // Slider & Input year controls
     slider.addEventListener("input", (e) => {
       state.cutoffYear = parseInt(e.target.value, 10);
       syncControls(ui);
-      updateToggleText(ui);
       saveState();
       runFilter();
     });
@@ -610,7 +888,6 @@ function initChronoLock() {
     input.addEventListener("input", (e) => {
       state.cutoffYear = parseInt(e.target.value, 10);
       syncControls(ui);
-      updateToggleText(ui);
       saveState();
       runFilter();
     });
@@ -619,7 +896,6 @@ function initChronoLock() {
       btn.addEventListener("click", () => {
         state.cutoffYear = parseInt(btn.dataset.year, 10);
         syncControls(ui);
-        updateToggleText(ui);
         saveState();
         runFilter();
       });
@@ -631,11 +907,9 @@ function initChronoLock() {
       runFilter();
     });
 
+    // Channel adding
     const channelInput = ui.querySelector("#chronolock-channel-input");
     const channelAddBtn = ui.querySelector("#chronolock-channel-add");
-    const keywordInput = ui.querySelector("#chronolock-keyword-input");
-    const keywordAddBtn = ui.querySelector("#chronolock-keyword-add");
-
     channelAddBtn?.addEventListener("click", () => {
       if (channelInput && channelInput.value) {
         addBlockedChannel(channelInput.value);
@@ -650,6 +924,9 @@ function initChronoLock() {
       }
     });
 
+    // Keyword adding
+    const keywordInput = ui.querySelector("#chronolock-keyword-input");
+    const keywordAddBtn = ui.querySelector("#chronolock-keyword-add");
     keywordAddBtn?.addEventListener("click", () => {
       if (keywordInput && keywordInput.value) {
         addBlockedKeyword(keywordInput.value);
@@ -811,28 +1088,25 @@ function initChronoLock() {
   }
 
   function isBlockedByChannelOrKeyword(v) {
-    if ((!state.blockedChannels || state.blockedChannels.length === 0) &&
-        (!state.blockedKeywords || state.blockedKeywords.length === 0)) {
-      return false;
-    }
-
     const details = extractVideoDetails(v);
-    const chLower = (details.channelName || "").toLowerCase();
-    const titleLower = (details.videoTitle || "").toLowerCase();
-    const fullLower = (details.fullText || "").toLowerCase();
 
-    // Check channel
-    if (chLower && state.blockedChannels.length > 0) {
-      for (const blocked of state.blockedChannels) {
-        const b = blocked.toLowerCase().trim();
-        if (b && (chLower === b || chLower.includes(b))) {
-          return true;
+    // 1. Check channel if channelFilterEnabled
+    if (state.channelFilterEnabled && Array.isArray(state.blockedChannels) && state.blockedChannels.length > 0) {
+      const chLower = (details.channelName || "").toLowerCase();
+      if (chLower) {
+        for (const blocked of state.blockedChannels) {
+          const b = blocked.toLowerCase().trim();
+          if (b && (chLower === b || chLower.includes(b))) {
+            return true;
+          }
         }
       }
     }
 
-    // Check keyword against video title and full card text
-    if (state.blockedKeywords.length > 0) {
+    // 2. Check keyword if keywordFilterEnabled
+    if (state.keywordFilterEnabled && Array.isArray(state.blockedKeywords) && state.blockedKeywords.length > 0) {
+      const titleLower = (details.videoTitle || "").toLowerCase();
+      const fullLower = (details.fullText || "").toLowerCase();
       for (const blocked of state.blockedKeywords) {
         const b = blocked.toLowerCase().trim();
         if (b && (titleLower.includes(b) || fullLower.includes(b))) {
@@ -879,6 +1153,7 @@ function initChronoLock() {
       attachBlockButton(v);
       resetVideo(v);
 
+      // If master extension switch is off, do not filter anything
       if (!state.enabled) {
         return;
       }
@@ -889,12 +1164,14 @@ function initChronoLock() {
         return;
       }
 
-      // Check year cutoff
-      const text = extractVideoDateText(v);
-      const year = getYear(text);
+      // Check year cutoff (only if yearFilterEnabled is on)
+      if (state.yearFilterEnabled) {
+        const text = extractVideoDateText(v);
+        const year = getYear(text);
 
-      if (year !== null && year > state.cutoffYear) {
-        applyMode(v);
+        if (year !== null && year > state.cutoffYear) {
+          applyMode(v);
+        }
       }
     });
   }
