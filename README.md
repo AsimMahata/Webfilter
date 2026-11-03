@@ -1,7 +1,7 @@
 # WEBFILTER
 
 <p align="center">
-  <img src="icons/chronolocklogo.png" width="200" />
+  <img src="icons/webfilterlogo.png" width="200" />
 </p>
 
 A lightweight, modern browser extension (Manifest V3) for filtering **YouTube** videos and **Twitter / X** tweets by upload age, channels/authors, and keywords.

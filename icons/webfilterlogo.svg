@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background & Glow Gradients -->
+    <linearGradient id="shieldRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="35%" stop-color="#00D2FF"/>
+      <stop offset="70%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="shieldBg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#0F1E36"/>
+      <stop offset="100%" stop-color="#060B14"/>
+    </linearGradient>
+    <linearGradient id="bladeGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#67E8F9"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="bladeGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="funnelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="60%" stop-color="#0284C7"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="glossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Cyber Shield Contour with Glow -->
+  <path d="M 256 32 C 345 32 425 68 440 85 C 448 140 458 310 380 405 C 322 475 272 500 256 508 C 240 500 190 475 132 405 C 54 310 64 140 72 85 C 87 68 167 32 256 32 Z" 
+        fill="url(#shieldBg)" 
+        stroke="url(#shieldRim)" 
+        stroke-width="16" 
+        stroke-linejoin="round"/>
+
+  <!-- Inner Shield Trim Line -->
+  <path d="M 256 58 C 330 58 398 88 412 102 C 418 145 427 285 362 368 C 314 428 270 452 256 460 C 242 452 198 428 150 368 C 85 285 94 145 100 102 C 114 88 182 58 256 58 Z" 
+        fill="none" 
+        stroke="#00D2FF" 
+        stroke-width="2.5" 
+        stroke-opacity="0.6"/>
+
+  <!-- Filter Funnel Cradle (Lower Shield Segment) -->
+  <path d="M 148 190 C 138 235 160 270 190 320 C 215 362 238 395 244 425 L 244 445 L 268 445 L 268 425 C 274 395 297 362 322 320 C 352 270 374 235 364 190 C 350 196 332 200 310 195 C 330 230 315 270 288 312 C 270 340 258 375 256 405 C 254 375 242 340 224 312 C 197 270 182 230 202 195 C 180 200 162 196 148 190 Z" 
+        fill="url(#funnelGrad)" 
+        opacity="0.9"/>
+
+  <!-- Central Circular Aperture Rim -->
+  <circle cx="256" cy="205" r="88" fill="#071120" stroke="url(#shieldRim)" stroke-width="9"/>
+  
+  <!-- Aperture Iris Blades (Filtering Content) -->
+  <g id="aperture-blades" transform="rotate(-15 256 205)">
+    <!-- Blade 1 -->
+    <path d="M 256 125 A 80 80 0 0 1 325 165 L 275 195 Z" fill="url(#bladeGrad1)" opacity="0.95"/>
+    <!-- Blade 2 -->
+    <path d="M 325 165 A 80 80 0 0 1 336 245 L 275 225 Z" fill="url(#bladeGrad2)" opacity="0.95"/>
+    <!-- Blade 3 -->
+    <path d="M 336 245 A 80 80 0 0 1 278 283 L 245 235 Z" fill="url(#bladeGrad1)" opacity="0.95"/>
+    <!-- Blade 4 -->
+    <path d="M 278 283 A 80 80 0 0 1 198 268 L 225 210 Z" fill="url(#bladeGrad2)" opacity="0.95"/>
+    <!-- Blade 5 -->
+    <path d="M 198 268 A 80 80 0 0 1 176 190 L 235 185 Z" fill="url(#bladeGrad1)" opacity="0.95"/>
+    <!-- Blade 6 -->
+    <path d="M 176 190 A 80 80 0 0 1 256 125 L 255 185 Z" fill="url(#bladeGrad2)" opacity="0.95"/>
+  </g>
+
+  <!-- Central Aperture Opening Hexagon (Focus / Core Filter) -->
+  <polygon points="256,182 276,193 276,217 256,228 236,217 236,193" fill="#050B14" stroke="#38BDF8" stroke-width="3"/>
+
+  <!-- Diagonal Gloss Highlight on Shield Face -->
+  <path d="M 256 32 C 345 32 425 68 440 85 C 448 140 458 310 380 405 C 322 475 272 500 256 508 Z" 
+        fill="url(#glossGrad)" 
+        pointer-events="none"/>
+</svg>
