@@ -147,10 +147,10 @@ function initChronoLock() {
     right: 16px;
     z-index: 99999999;
 
-    width: 280px;
+    width: 360px;
     border-radius: 12px;
 
-    font-size: 11.5px;
+    font-size: 13px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #f1f1f1;
 
@@ -204,7 +204,7 @@ function initChronoLock() {
     align-items: center;
     gap: 6px;
     font-weight: 700;
-    font-size: 11.5px;
+    font-size: 13px;
     letter-spacing: 0.06em;
     color: #ffffff;
   }
@@ -276,8 +276,8 @@ function initChronoLock() {
   .cl-mini-switch {
     position: relative;
     display: inline-block;
-    width: 22px;
-    height: 12px;
+    width: 26px;
+    height: 14px;
     flex-shrink: 0;
   }
 
@@ -299,8 +299,8 @@ function initChronoLock() {
   .cl-mini-toggle:before {
     position: absolute;
     content: "";
-    height: 8px;
-    width: 8px;
+    height: 10px;
+    width: 10px;
     left: 2px;
     bottom: 2px;
     background: white;
@@ -313,13 +313,13 @@ function initChronoLock() {
   }
 
   .cl-mini-switch input:checked + .cl-mini-toggle:before {
-    transform: translateX(10px);
+    transform: translateX(12px);
   }
 
   /* Panel body */
   #chronolock-panel {
     padding: 10px 12px 12px 12px;
-    max-height: 440px;
+    max-height: 520px;
     overflow-y: auto;
     scrollbar-width: thin;
   }
@@ -340,7 +340,7 @@ function initChronoLock() {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 500;
   }
 
@@ -374,9 +374,9 @@ function initChronoLock() {
     background: transparent;
     border: none;
     color: #94a3b8;
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 5px 0;
+    padding: 7px 0;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -414,7 +414,7 @@ function initChronoLock() {
     align-items: center;
     font-weight: 600;
     color: #cbd5e1;
-    font-size: 10.5px;
+    font-size: 12px;
   }
 
   .cl-slider-row {
@@ -473,8 +473,8 @@ function initChronoLock() {
     color: #fff;
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 5px;
-    padding: 4px 6px;
-    font-size: 10.5px;
+    padding: 6px 9px;
+    font-size: 12.5px;
     cursor: pointer;
   }
 
@@ -490,8 +490,8 @@ function initChronoLock() {
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 5px;
     color: #fff;
-    padding: 4px 8px;
-    font-size: 10.5px;
+    padding: 7px 10px;
+    font-size: 12.5px;
     outline: none;
   }
 
@@ -515,8 +515,8 @@ function initChronoLock() {
     border: 1px solid rgba(255,255,255,0.15);
     border-radius: 5px;
     color: #fff;
-    padding: 4px 6px;
-    font-size: 10.5px;
+    padding: 7px 10px;
+    font-size: 12.5px;
     outline: none;
   }
 
@@ -531,8 +531,8 @@ function initChronoLock() {
     border-radius: 5px;
     color: #ffffff;
     font-weight: 600;
-    padding: 4px 10px;
-    font-size: 10.5px;
+    padding: 7px 16px;
+    font-size: 12.5px;
     transition: background 0.15s ease;
   }
 
@@ -542,8 +542,8 @@ function initChronoLock() {
 
   /* Modern Item List with individual toggles & delete */
   .chronolock-list-box {
-    max-height: 140px;
-    min-height: 50px;
+    max-height: 240px;
+    min-height: 80px;
     overflow-y: auto;
     background: rgba(0,0,0,0.38);
     border: 1px solid rgba(255,255,255,0.1);
@@ -602,9 +602,9 @@ function initChronoLock() {
     cursor: pointer;
     font-weight: bold;
     color: #f87171;
-    font-size: 13px;
+    font-size: 16px;
     line-height: 1;
-    padding: 1px 4px;
+    padding: 2px 6px;
     border-radius: 3px;
     background: transparent;
     border: none;
@@ -658,6 +658,11 @@ function initChronoLock() {
   ytd-reel-item-renderer:hover .chronolock-block-btn,
   article[data-testid="tweet"]:hover .chronolock-block-btn {
     display: inline-flex !important;
+  }
+
+  article[data-testid="tweet"] .chronolock-block-btn {
+    top: 6px;
+    right: 40px; /* leaves room for Twitter three-dots dropdown */
   }
   `;
   (document.head || document.documentElement).appendChild(style);
@@ -1310,24 +1315,42 @@ function initChronoLock() {
       let authorName = "";
       let authorHandle = "";
 
+      // 1. Extract from User-Name container
       const userEl = item.querySelector('[data-testid="User-Name"]');
       if (userEl) {
         const fullUserText = (userEl.textContent || "").trim();
-        // Look for @handle
-        const handleMatch = fullUserText.match(/@([\w_]+)/);
+        const handleMatch = fullUserText.match(/@([a-zA-Z0-9_]+)/);
         if (handleMatch) {
           authorHandle = handleMatch[0]; // e.g. @username
+        }
+
+        // Try extracting author display name from first child or before @
+        const firstSpan = userEl.querySelector("span");
+        if (firstSpan && firstSpan.textContent) {
+          authorName = firstSpan.textContent.trim();
+        }
+        if (!authorName && handleMatch) {
           authorName = fullUserText.replace(handleMatch[0], "").split("·")[0].trim();
-        } else {
-          authorName = fullUserText.split("·")[0].trim();
         }
       }
 
-      // Tweet text
+      // Fallback: look for profile link
+      if (!authorHandle) {
+        const userLink = item.querySelector('a[href^="/"][role="link"]:not([href*="/status/"]):not([href*="/photo/"])');
+        if (userLink) {
+          const href = userLink.getAttribute("href") || "";
+          const m = href.match(/^\/([a-zA-Z0-9_]+)/);
+          if (m && !["home", "explore", "notifications", "messages", "search", "i"].includes(m[1].toLowerCase())) {
+            authorHandle = "@" + m[1];
+          }
+        }
+      }
+
+      // Tweet text (support multiple text spans/quotes)
       let tweetText = "";
-      const tweetTextEl = item.querySelector('[data-testid="tweetText"]');
-      if (tweetTextEl) {
-        tweetText = (tweetTextEl.textContent || "").trim();
+      const tweetTextEls = item.querySelectorAll('[data-testid="tweetText"]');
+      if (tweetTextEls.length > 0) {
+        tweetText = Array.from(tweetTextEls).map(el => (el.textContent || "").trim()).join(" ");
       }
 
       const fullText = (item.textContent || "").trim();
@@ -1430,7 +1453,22 @@ function initChronoLock() {
   // FILTERING
   // ---------------------------
 
+  function getFilterTarget(item) {
+    if (isTwitter) {
+      // Find parent cell container to remove Twitter gaps and separator borders cleanly
+      const cell = item.closest('[data-testid="cellInnerDiv"]');
+      if (cell) return cell;
+    }
+    return item;
+  }
+
   function resetItem(item) {
+    const target = getFilterTarget(item);
+    target.classList.remove(
+      "chronolock-hidden",
+      "chronolock-dim",
+      "chronolock-fade"
+    );
     item.classList.remove(
       "chronolock-hidden",
       "chronolock-dim",
@@ -1439,18 +1477,22 @@ function initChronoLock() {
   }
 
   function applyMode(item) {
+    const target = getFilterTarget(item);
+    target.classList.remove(
+      "chronolock-hidden",
+      "chronolock-dim",
+      "chronolock-fade"
+    );
     item.classList.remove(
       "chronolock-hidden",
       "chronolock-dim",
       "chronolock-fade"
     );
 
-    if (state.mode === "dim") {
-      item.classList.add("chronolock-dim");
-    } else if (state.mode === "fade") {
-      item.classList.add("chronolock-fade");
-    } else {
-      item.classList.add("chronolock-hidden");
+    const modeClass = state.mode === "dim" ? "chronolock-dim" : (state.mode === "fade" ? "chronolock-fade" : "chronolock-hidden");
+    target.classList.add(modeClass);
+    if (target !== item) {
+      item.classList.add(modeClass);
     }
   }
 
